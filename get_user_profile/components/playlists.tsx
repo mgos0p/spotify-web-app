@@ -5,6 +5,8 @@ interface PlaylistsProps {
 }
 
 export const Playlists: React.FC<PlaylistsProps> = ({ playlists }) => {
+  const itemClass =
+    "bg-gray-700 hover:bg-gray-600 p-3 rounded-lg transition-colors duration-300 ease-in-out flex items-center";
   return (
     <section
       id="playlists"
@@ -14,10 +16,7 @@ export const Playlists: React.FC<PlaylistsProps> = ({ playlists }) => {
       <ul className="list-none space-y-2">
         {playlists.items.length > 0 &&
           playlists.items.map((item) => (
-            <li
-              key={item.id}
-              className="bg-gray-700 hover:bg-gray-600 p-3 rounded-lg transition-colors duration-300 ease-in-out flex items-center"
-            >
+            <li key={item.id} className={itemClass}>
               <img
                 src={item.images.length > 0 ? item.images[0].url : ""}
                 alt={`Cover for ${item.name}`}
@@ -35,3 +34,4 @@ export const Playlists: React.FC<PlaylistsProps> = ({ playlists }) => {
     </section>
   );
 };
+
