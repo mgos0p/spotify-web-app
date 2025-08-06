@@ -7,7 +7,7 @@ interface UserProfile {
     filter_locked: boolean;
   };
   external_urls: { spotify: string };
-  followers: { href: string; total: number };
+  followers?: { href: string; total: number };
   href: string;
   id: string;
   images: Image[];
