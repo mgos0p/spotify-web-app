@@ -51,6 +51,13 @@ export const PlaylistDetail: React.FC<PlaylistDetailProps> = ({
             const features = trackFeatures[item.track.id];
             return (
               <div key={index} className="bg-gray-700 p-4 rounded-lg shadow">
+                {item.track.album.images.length > 0 && (
+                  <img
+                    src={item.track.album.images[0].url}
+                    alt={`Album art for ${item.track.name}`}
+                    className="w-32 h-32 object-cover rounded mb-4"
+                  />
+                )}
                 <h3 className="text-xl font-semibold">{item.track.name}</h3>
                 <p className="text-gray-400">
                   {displayArtistNames(item.track.artists)}
