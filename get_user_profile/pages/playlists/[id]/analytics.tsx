@@ -69,7 +69,11 @@ const AnalyticsPage = () => {
       const playlistData = await fetchPlaylist(accessToken, playlistId, 50, 0);
       setPlaylist(playlistData);
       const ids =
-        playlistData.tracks?.items?.map((item) => item.track.id) ?? [];
+        playlistData.tracks?.items
+          ?.filter(
+            (item) => item.track && item.track.id && item.track.type === "track"
+          )
+          .map((item) => item.track.id) ?? [];
       if (ids.length > 0) {
         const feats = await fetchAudioFeaturesBatch(accessToken, ids);
         setFeatures(feats);
@@ -97,8 +101,12 @@ const AnalyticsPage = () => {
       const tracks = await fetchPlaylistItems(accessToken, playlist.tracks.next);
       const uniqueItems = tracks.items.filter(
         (item) =>
+          item.track &&
+          item.track.id &&
+          item.track.type === "track" &&
           !playlist.tracks!.items.some(
-            (existing) => existing.track.id === item.track.id
+            (existing) =>
+              existing.track && existing.track.id === item.track!.id
           )
       );
       setPlaylist((prev) =>
@@ -114,7 +122,7 @@ const AnalyticsPage = () => {
             }
           : prev
       );
-      const ids = uniqueItems.map((item) => item.track.id);
+      const ids = uniqueItems.map((item) => item.track!.id);
       if (ids.length > 0) {
         const feats = await fetchAudioFeaturesBatch(accessToken, ids);
         setFeatures((prev) => [...prev, ...feats]);
