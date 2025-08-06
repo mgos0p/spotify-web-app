@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from "react";
+import { Loader } from "./loader";
 
 interface PlaylistDetailProps {
   playlistDetail: SpotifyPlaylistResponse;
@@ -92,7 +93,7 @@ export const PlaylistDetail: React.FC<PlaylistDetailProps> = ({
           })}
         </div>
         <div ref={loaderRef} className="flex justify-center p-5">
-          {playlistDetail.tracks?.next && <p>Loading more...</p>}
+          {playlistDetail.tracks?.next && <Loader />}
         </div>
       </section>
     </>

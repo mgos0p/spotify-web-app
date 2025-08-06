@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { Loader } from "../components/loader";
 import { useRouter } from "next/router";
 
 export default function Callback() {
@@ -14,5 +15,5 @@ export default function Callback() {
     }
   }, [code, router]);
 
-  return <div>Loading...</div>;
+  return <Loader />;
 }
