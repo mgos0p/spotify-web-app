@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import { fetchPlaylist, fetchPlaylistItems } from "../api/playlist";
 import { fetchAudioFeatures } from "../api/track";
 import { PlaylistDetail } from "../../components/playlistDetail";
-import { redirectToAuthCodeFlow } from "../../../get_user_profile/src/authCodeWithPkce";
+import { redirectToAuthCodeFlow } from "../../src/authCodeWithPkce";
 
 const clientId = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID;
 
@@ -23,7 +23,7 @@ const PlaylistDetailPage = () => {
     const fetchData = async () => {
       const accessToken = localStorage.getItem("access_token");
       if (!accessToken) {
-        console.error("Access token not found");
+        redirectToAuthCodeFlow(clientId!);
         return;
       }
       try {
@@ -65,8 +65,7 @@ const PlaylistDetailPage = () => {
       setLoading(true);
       const storedAccessToken = localStorage.getItem("access_token");
       if (!storedAccessToken) {
-        router.push("/");
-        redirectToAuthCodeFlow(clientId);
+        redirectToAuthCodeFlow(clientId!);
       } else {
         const tracks = await fetchPlaylistItems(
           storedAccessToken,

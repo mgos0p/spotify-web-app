@@ -3,6 +3,8 @@ export async function redirectToAuthCodeFlow(clientId: string) {
   const challenge = await generateCodeChallenge(verifier);
   try {
     localStorage.setItem("verifier", verifier);
+    const currentPath = window.location.pathname + window.location.search;
+    localStorage.setItem("redirect_path", currentPath);
   } catch (e) {
     console.warn("Failed to access localStorage", e);
   }

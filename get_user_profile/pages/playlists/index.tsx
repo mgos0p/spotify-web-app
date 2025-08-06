@@ -3,7 +3,6 @@ import { Playlists } from "../../components/playlists";
 import { fetchPlaylists } from "../../pages/api/playlist";
 import { redirectToAuthCodeFlow } from "../../src/authCodeWithPkce";
 
-import { useRouter } from "next/router";
 import { useAuth } from "../../src/AuthContext";
 
 const clientId = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID;
@@ -11,8 +10,7 @@ export default function PlaylistsPage() {
   const [playlists, setPlaylists] = useState<SpotifyPlaylistsResponse | null>(
     null
   );
-  const router = useRouter();
-  const { token } = useAuth();
+  const { token, setToken } = useAuth();
   const [loading, setLoading] = useState(false);
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
@@ -21,10 +19,15 @@ export default function PlaylistsPage() {
     if (!clientId || !hasMore || loading) return;
     setLoading(true);
     try {
-      if (!token) {
-        router.push("/");
+      const storedAccessToken =
+        token ||
+        (typeof window !== "undefined"
+          ? localStorage.getItem("access_token")
+          : null);
+      if (!storedAccessToken) {
         redirectToAuthCodeFlow(clientId);
       } else {
+        if (!token) setToken(storedAccessToken);
         const playlistsData = await fetchPlaylists(
           storedAccessToken,
           50,
