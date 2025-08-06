@@ -25,7 +25,7 @@ export const Profile: React.FC<ProfileProps> = ({ profile }) => {
         <h2 className="text-2xl font-bold mb-3">
           Logged in as {profile.display_name}
         </h2>
-        {profile.images.length > 0 && (
+        {profile.images?.length > 0 && (
           <img
             id="avatar"
             className="w-48 h-48 object-cover rounded-full mx-auto mb-4"
