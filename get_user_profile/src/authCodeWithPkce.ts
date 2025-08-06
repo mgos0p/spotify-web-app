@@ -1,8 +1,11 @@
 export async function redirectToAuthCodeFlow(clientId: string) {
   const verifier = generateCodeVerifier(128);
   const challenge = await generateCodeChallenge(verifier);
-
-  localStorage.setItem("verifier", verifier);
+  try {
+    localStorage.setItem("verifier", verifier);
+  } catch (e) {
+    console.warn("Failed to access localStorage", e);
+  }
 
   const params = new URLSearchParams();
   params.append("client_id", clientId);
@@ -17,7 +20,17 @@ export async function redirectToAuthCodeFlow(clientId: string) {
 }
 
 export async function getAccessToken(clientId: string, code: string) {
-  const verifier = localStorage.getItem("verifier");
+  let verifier: string | null = null;
+  try {
+    verifier = localStorage.getItem("verifier");
+  } catch (e) {
+    console.warn("Failed to access localStorage", e);
+    return null;
+  }
+
+  if (!verifier) {
+    return null;
+  }
 
   const params = new URLSearchParams();
   params.append("client_id", clientId);
@@ -25,7 +38,7 @@ export async function getAccessToken(clientId: string, code: string) {
   params.append("code", code);
   //   params.append("redirect_uri", "http://localhost:5175/callback");
   params.append("redirect_uri", "http://localhost:3000/callback");
-  params.append("code_verifier", verifier!);
+  params.append("code_verifier", verifier);
 
   const result = await fetch("https://accounts.spotify.com/api/token", {
     method: "POST",
@@ -35,9 +48,13 @@ export async function getAccessToken(clientId: string, code: string) {
 
   const { access_token } = await result.json();
   if (access_token) {
-    localStorage.setItem("access_token", access_token);
+    try {
+      localStorage.setItem("access_token", access_token);
+    } catch (e) {
+      console.warn("Failed to access localStorage", e);
+    }
   }
-  return access_token;
+  return access_token || null;
 }
 
   export function generateCodeVerifier(length: number) {
