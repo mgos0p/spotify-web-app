@@ -4,7 +4,7 @@ import { fetchProfile } from "../pages/api/profile";
 import {
   redirectToAuthCodeFlow,
   getAccessToken,
-} from "../../get_user_profile/src/authCodeWithPkce";
+} from "../src/authCodeWithPkce";
 import { useAuth } from "../src/AuthContext";
 
 const clientId = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID;

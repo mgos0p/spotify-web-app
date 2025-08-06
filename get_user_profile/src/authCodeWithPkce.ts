@@ -57,7 +57,7 @@ export async function getAccessToken(clientId: string, code: string) {
   return access_token || null;
 }
 
-  export function generateCodeVerifier(length: number) {
+export function generateCodeVerifier(length: number) {
   let text = "";
   let possible =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -68,10 +68,10 @@ export async function getAccessToken(clientId: string, code: string) {
   return text;
 }
 
-  export async function generateCodeChallenge(codeVerifier: string) {
+export async function generateCodeChallenge(codeVerifier: string) {
   const data = new TextEncoder().encode(codeVerifier);
   const digest = await window.crypto.subtle.digest("SHA-256", data);
-  return btoa(String.fromCharCode.apply(null, [...new Uint8Array(digest)]))
+  return btoa(String.fromCharCode(...new Uint8Array(digest)))
     .replace(/\+/g, "-")
     .replace(/\//g, "_")
     .replace(/=+$/, "");
