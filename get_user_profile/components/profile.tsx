@@ -6,7 +6,7 @@ interface UserProfile {
   id: string;
   email: string;
   uri: string;
-  external_urls: { spotify: string };
+  external_urls?: { spotify: string };
   followers?: { href: string; total: number };
   href: string;
 }
@@ -43,15 +43,17 @@ export const Profile: React.FC<ProfileProps> = ({ profile }) => {
               {profile.uri}
             </a>
           </li>
-          <li>
-            Link:{" "}
-            <a
-              href={profile.external_urls.spotify}
-              className="text-blue-400 hover:text-blue-300"
-            >
-              Profile Link
-            </a>
-          </li>
+          {profile.external_urls?.spotify && (
+            <li>
+              Link:{" "}
+              <a
+                href={profile.external_urls.spotify}
+                className="text-blue-400 hover:text-blue-300"
+              >
+                Profile Link
+              </a>
+            </li>
+          )}
         </ul>
       </section>
       <section
