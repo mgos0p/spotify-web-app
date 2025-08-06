@@ -57,7 +57,7 @@ interface SpotifyPlaylistResponse {
   owner: SpotifyUserObject;
   public: boolean | null;
   snapshot_id: string;
-  tracks: SpotifyPlaylistTracksResponse;
+  tracks?: SpotifyPlaylistTracksResponse;
   type: string;
   uri: string;
 }
