@@ -33,6 +33,11 @@ export default function PlaylistsPage() {
           50,
           offset
         );
+        if (!playlistsData || !Array.isArray(playlistsData.items)) {
+          console.error("Invalid playlists data:", playlistsData);
+          setHasMore(false);
+          return;
+        }
         // Deduplicate playlists by ID before updating state
         setPlaylists((prev) => {
           const existingItems = prev?.items || [];
