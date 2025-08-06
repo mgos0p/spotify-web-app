@@ -4,18 +4,21 @@ import { fetchPlaylist, fetchPlaylistItems } from "../api/playlist";
 import { fetchAudioFeatures } from "../api/track";
 import { PlaylistDetail } from "../../components/playlistDetail";
 import { redirectToAuthCodeFlow } from "../../../get_user_profile/src/authCodeWithPkce";
+
 const clientId = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID;
+
 const PlaylistDetailPage = () => {
   const [playlistDetail, setPlaylistDetail] =
     useState<SpotifyPlaylistResponse | null>(null);
-  const [additionalPlaylistItems, setAdditionalPlaylistItems] =
-    useState<SpotifyPlaylistTracksResponse | null>(null);
   const [trackFeatures, setTrackFeatures] = useState<{
     [key: string]: SpotifyAudioFeaturesResponse;
   }>({});
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { id } = router.query;
   const playlistId = typeof id === "string" ? id : undefined;
+
+  // 初回のプレイリスト情報とトラック情報を取得
   useEffect(() => {
     const fetchData = async () => {
       const accessToken = localStorage.getItem("access_token");
@@ -32,6 +35,8 @@ const PlaylistDetailPage = () => {
             0
           );
           setPlaylistDetail(playlistData);
+
+          // トラックの音響特徴量を取得
           const featuresPromises = playlistData.tracks.items.map((track) =>
             fetchAudioFeatures(accessToken, track.track.id)
           );
@@ -39,7 +44,7 @@ const PlaylistDetailPage = () => {
           const featuresMap = features.reduce((acc, feature) => {
             acc[feature.id] = feature;
             return acc;
-          }, {});
+          }, {} as { [key: string]: SpotifyAudioFeaturesResponse });
           setTrackFeatures(featuresMap);
         }
       } catch (error) {
@@ -51,38 +56,73 @@ const PlaylistDetailPage = () => {
       fetchData();
     }
   }, [playlistId, clientId]);
-  useEffect(() => {
-    console.log(trackFeatures);
-  }, [trackFeatures]);
 
-  if (!playlistDetail) {
-    return <div>Loading...</div>;
-  }
+  // 追加読み込み処理
   const handleNext = async () => {
-    if (!clientId) return;
+    if (!clientId || !playlistDetail || !playlistDetail.tracks.next || loading)
+      return;
     try {
+      setLoading(true);
       const storedAccessToken = localStorage.getItem("access_token");
       if (!storedAccessToken) {
         router.push("/");
         redirectToAuthCodeFlow(clientId);
       } else {
-        if (playlistDetail && playlistDetail.tracks.next) {
-          const tracks = await fetchPlaylistItems(
-            storedAccessToken,
-            playlistDetail.tracks.next
-          );
-          setAdditionalPlaylistItems(tracks);
-        }
+        const tracks = await fetchPlaylistItems(
+          storedAccessToken,
+          playlistDetail.tracks.next
+        );
+
+        // Deduplicate tracks by ID before updating state
+        const uniqueItems = tracks.items.filter(
+          (item) =>
+            !playlistDetail.tracks.items.some(
+              (existing) => existing.track.id === item.track.id
+            )
+        );
+
+        // プレイリスト情報を更新（トラックを追加し next を更新）
+        setPlaylistDetail((prev) =>
+          prev
+            ? {
+                ...prev,
+                tracks: {
+                  ...prev.tracks,
+                  items: [...prev.tracks.items, ...uniqueItems],
+                  next: tracks.next,
+                  previous: tracks.previous,
+                },
+              }
+            : prev
+        );
+
+        // 新しく取得したトラックの音響特徴量を取得
+        const featuresPromises = uniqueItems.map((item) =>
+          fetchAudioFeatures(storedAccessToken, item.track.id)
+        );
+        const features = await Promise.all(featuresPromises);
+        const featuresMap = features.reduce((acc, feature) => {
+          acc[feature.id] = feature;
+          return acc;
+        }, {} as { [key: string]: SpotifyAudioFeaturesResponse });
+
+        setTrackFeatures((prev) => ({ ...prev, ...featuresMap }));
       }
     } catch (error) {
       console.error("Failed to fetch playlist items:", error);
+    } finally {
+      setLoading(false);
     }
   };
+
+  if (!playlistDetail) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <div>
       <PlaylistDetail
         playlistDetail={playlistDetail}
-        additionalPlaylistItems={additionalPlaylistItems}
         trackFeatures={trackFeatures}
         handleNext={handleNext}
       />
@@ -91,104 +131,3 @@ const PlaylistDetailPage = () => {
 };
 
 export default PlaylistDetailPage;
-
-// import React, { useEffect, useState } from "react";
-// import { Playlists } from "../../components/playlists";
-// import { fetchPlaylist, fetchPlaylistItems } from "../../pages/api/playlist";
-// import {
-//   redirectToAuthCodeFlow,
-//   getAccessToken,
-// } from "../../../get_user_profile/src/authCodeWithPkce";
-// import { useRouter } from "next/router";
-// import { PlaylistDetail } from "../../components/playlistDetail";
-
-// const clientId = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID;
-// export default function PlaylistDetailPage() {
-//   const [playlistDetail, setPlaylistDetail] =
-//     useState<SpotifyPlaylistResponse | null>(null);
-//   const [additionalPlaylistItems, setAdditionalPlaylistItems] =
-//     useState<SpotifyPlaylistTracksResponse | null>(null);
-//   const router = useRouter();
-//   const { id } = router.query;
-//   const playlistId = typeof id === "string" ? id : undefined;
-//   useEffect(() => {
-//     const fetchData = async () => {
-//       if (!clientId) return;
-
-//       try {
-//         const storedAccessToken = localStorage.getItem("access_token");
-//         if (!storedAccessToken) {
-//           router.push("/");
-//           redirectToAuthCodeFlow(clientId);
-//         } else {
-//           if (playlistId) {
-//             const playlistData = await fetchPlaylist(
-//               storedAccessToken,
-//               playlistId,
-//               20,
-//               0
-//             );
-//             setPlaylistDetail(playlistData);
-//           }
-//         }
-//       } catch (error) {
-//         console.error("Failed to fetch playlists:", error);
-//       }
-//     };
-
-//     fetchData();
-//   }, [playlistId, clientId, router]);
-//   const handlePrevious = async () => {
-//     if (!clientId) return;
-//     try {
-//       const storedAccessToken = localStorage.getItem("access_token");
-//       if (!storedAccessToken) {
-//         router.push("/");
-//         redirectToAuthCodeFlow(clientId);
-//       } else {
-//         if (playlistDetail && playlistDetail.tracks.previous) {
-//           const tracks = await fetchPlaylistItems(
-//             storedAccessToken,
-//             playlistDetail.tracks.previous
-//           );
-//           setAdditionalPlaylistItems(tracks);
-//         }
-//       }
-//     } catch (error) {
-//       console.error("Failed to fetch playlist items:", error);
-//     }
-//   };
-//   const handleNext = async () => {
-//     if (!clientId) return;
-//     try {
-//       const storedAccessToken = localStorage.getItem("access_token");
-//       if (!storedAccessToken) {
-//         router.push("/");
-//         redirectToAuthCodeFlow(clientId);
-//       } else {
-//         if (playlistDetail && playlistDetail.tracks.next) {
-//           const tracks = await fetchPlaylistItems(
-//             storedAccessToken,
-//             playlistDetail.tracks.next
-//           );
-//           setAdditionalPlaylistItems(tracks);
-//         }
-//       }
-//     } catch (error) {
-//       console.error("Failed to fetch playlist items:", error);
-//     }
-//   };
-//   if (!playlistDetail) {
-//     return <div>Loading...</div>;
-//   }
-//   return (
-//     <div>
-//       <PlaylistDetail
-//         playlistDetail={playlistDetail}
-//         additionalPlaylistItems={additionalPlaylistItems}
-//         handlePrevious={handlePrevious}
-//         handleNext={handleNext}
-//       />
-//     </div>
-//   );
-// }
