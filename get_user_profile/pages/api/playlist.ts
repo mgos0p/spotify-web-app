@@ -1,4 +1,3 @@
-import { useRouter } from "next/router";
 export const fetchPlaylists = async (
   code: string,
   limit: number,

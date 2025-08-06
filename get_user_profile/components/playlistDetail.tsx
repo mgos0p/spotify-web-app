@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from "react";
+import Link from "next/link";
 import { Loader } from "./loader";
 
 interface PlaylistDetailProps {
@@ -44,9 +45,17 @@ export const PlaylistDetail: React.FC<PlaylistDetailProps> = ({
         id="playlist-detail"
         className="bg-gray-800 text-white p-5 rounded-lg shadow-lg"
       >
-        <h2 className="text-2xl font-bold mb-4">
-          Playlist: {playlistDetail.name}
-        </h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-2xl font-bold">
+            Playlist: {playlistDetail.name}
+          </h2>
+          <Link
+            href={`/playlists/${playlistDetail.id}/analytics`}
+            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+          >
+            Analytics
+          </Link>
+        </div>
         <div
           className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 3xl:grid-cols-7 4xl:grid-cols-8"
         >
