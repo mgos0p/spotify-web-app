@@ -1,10 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Playlists } from "../../components/playlists";
 import { fetchPlaylists } from "../../pages/api/playlist";
-import {
-  redirectToAuthCodeFlow,
-  getAccessToken,
-} from "../../../get_user_profile/src/authCodeWithPkce";
+import { redirectToAuthCodeFlow } from "../../../get_user_profile/src/authCodeWithPkce";
 import { useRouter } from "next/router";
 
 const clientId = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID;
@@ -16,6 +13,7 @@ export default function PlaylistsPage() {
   const [loading, setLoading] = useState(false);
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
+  const loaderRef = useRef<HTMLDivElement | null>(null);
   const fetchData = async () => {
     if (!clientId || !hasMore || loading) return;
     setLoading(true);
@@ -25,7 +23,6 @@ export default function PlaylistsPage() {
         router.push("/");
         redirectToAuthCodeFlow(clientId);
       } else {
-        console.log(offset);
         const playlistsData = await fetchPlaylists(
           storedAccessToken,
           50,
@@ -50,9 +47,6 @@ export default function PlaylistsPage() {
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        console.log(entries);
-        console.log(hasMore);
-        console.log(loading);
         if (entries[0].isIntersecting && hasMore && !loading) {
           fetchData();
         }
@@ -60,10 +54,8 @@ export default function PlaylistsPage() {
       { threshold: 0.1 }
     );
 
-    // Assume there is a footer element to observe
-    const footer = document.getElementById("footer");
-    if (footer) {
-      observer.observe(footer);
+    if (loaderRef.current) {
+      observer.observe(loaderRef.current);
     }
 
     return () => {
@@ -77,7 +69,7 @@ export default function PlaylistsPage() {
   return (
     <div>
       <Playlists playlists={playlists} />
-      <div id="footer" style={{ height: "20px" }}></div>
+      <div ref={loaderRef} style={{ height: "20px" }}></div>
     </div>
   );
 }
