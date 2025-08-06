@@ -168,22 +168,22 @@ interface SpotifyArtistObject {
 }
 
 interface SpotifyAudioFeaturesResponse {
-  acousticness: number; // A confidence measure from 0.0 to 1.0 of whether the track is acoustic.
-  analysis_url: string; // A URL to access the full audio analysis of this track.
-  danceability: number; // Danceability describes how suitable a track is for dancing.
-  duration_ms: number; // The duration of the track in milliseconds.
-  energy: number; // Energy is a measure from 0.0 to 1.0 and represents a perceptual measure of intensity and activity.
-  id: string; // The Spotify ID for the track.
-  instrumentalness: number; // Predicts whether a track contains no vocals.
-  key: number; // The key the track is in. Integers map to pitches using standard Pitch Class notation.
-  liveness: number; // Detects the presence of an audience in the recording.
-  loudness: number; // The overall loudness of a track in decibels (dB).
-  mode: number; // Mode indicates the modality (major or minor) of a track.
-  speechiness: number; // Speechiness detects the presence of spoken words in a track.
-  tempo: number; // The overall estimated tempo of a track in beats per minute (BPM).
-  time_signature: number; // An estimated time signature of the track.
-  track_href: string; // A link to the Web API endpoint providing full details of the track.
-  type: string; // The object type, e.g., "audio_features".
-  uri: string; // The Spotify URI for the track.
-  valence: number; // A measure from 0.0 to 1.0 describing the musical positiveness conveyed by a track.
+  acousticness: number; // トラックがアコースティックであるかどうかの確信度（0.0〜1.0）。
+  analysis_url: string; // このトラックの詳細な音響解析にアクセスするためのURL。
+  danceability: number; // ダンスに適した度合い。
+  duration_ms: number; // トラックの再生時間（ミリ秒）。
+  energy: number; // 強度と活動性を表す0.0〜1.0の指標。
+  id: string; // トラックのSpotify ID。
+  instrumentalness: number; // ボーカルが含まれない可能性を予測。
+  key: number; // トラックのキー。整数は標準のピッチクラス表記に対応。
+  liveness: number; // 録音に聴衆が存在するかを検出。
+  loudness: number; // トラック全体のラウドネス（デシベル）。
+  mode: number; // トラックのモード（長調または短調）を示す。
+  speechiness: number; // トラック内の話し言葉の存在を検出。
+  tempo: number; // トラックのおおよそのテンポ（BPM）。
+  time_signature: number; // トラックの推定拍子。
+  track_href: string; // トラックの詳細を提供するWeb APIエンドポイントへのリンク。
+  type: string; // オブジェクトの種類（例：「audio_features」）。
+  uri: string; // トラックのSpotify URI。
+  valence: number; // トラックが伝えるポジティブさ（0.0〜1.0）。
 }
