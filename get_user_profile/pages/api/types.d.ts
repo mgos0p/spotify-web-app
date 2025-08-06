@@ -216,34 +216,8 @@ interface SpotifyAudioAnalysisSegment {
   loudness_max_time: number;
   loudness_max: number;
   loudness_end: number;
-  pitches: [
-    number,
-    number,
-    number,
-    number,
-    number,
-    number,
-    number,
-    number,
-    number,
-    number,
-    number,
-    number
-  ];
-  timbre: [
-    number,
-    number,
-    number,
-    number,
-    number,
-    number,
-    number,
-    number,
-    number,
-    number,
-    number,
-    number
-  ];
+  pitches: number[];
+  timbre: number[];
 }
 
 interface SpotifyAudioAnalysisTrack {
