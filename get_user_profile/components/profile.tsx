@@ -7,7 +7,7 @@ interface UserProfile {
   email: string;
   uri: string;
   external_urls: { spotify: string };
-  followers: { href: string; total: number };
+  followers?: { href: string; total: number };
   href: string;
 }
 
@@ -36,7 +36,7 @@ export const Profile: React.FC<ProfileProps> = ({ profile }) => {
         <ul className="list-none space-y-2">
           <li>User ID: {profile.id}</li>
           <li>Email: {profile.email}</li>
-          <li>Followers: {profile.followers.total}</li>
+          <li>Followers: {profile.followers?.total ?? 0}</li>
           <li>
             Spotify URI:{" "}
             <a href={profile.uri} className="text-blue-400 hover:text-blue-300">

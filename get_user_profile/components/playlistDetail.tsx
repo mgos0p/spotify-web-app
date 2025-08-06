@@ -21,7 +21,7 @@ export const PlaylistDetail: React.FC<PlaylistDetailProps> = ({
     if (!handleNext) return;
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && playlistDetail.tracks.next) {
+        if (entries[0].isIntersecting && playlistDetail.tracks?.next) {
           handleNext();
         }
       },
@@ -35,7 +35,7 @@ export const PlaylistDetail: React.FC<PlaylistDetailProps> = ({
     return () => {
       observer.disconnect();
     };
-  }, [handleNext, playlistDetail.tracks.next]);
+  }, [handleNext, playlistDetail.tracks?.next]);
 
   return (
     <>
@@ -47,7 +47,7 @@ export const PlaylistDetail: React.FC<PlaylistDetailProps> = ({
           Playlist: {playlistDetail.name}
         </h2>
         <div className="space-y-4">
-          {playlistDetail.tracks.items.map((item, index) => {
+          {playlistDetail.tracks?.items?.map((item, index) => {
             const features = trackFeatures[item.track.id];
             return (
               <div key={index} className="bg-gray-700 p-4 rounded-lg shadow">
@@ -92,7 +92,7 @@ export const PlaylistDetail: React.FC<PlaylistDetailProps> = ({
           })}
         </div>
         <div ref={loaderRef} className="flex justify-center p-5">
-          {playlistDetail.tracks.next && <p>Loading more...</p>}
+          {playlistDetail.tracks?.next && <p>Loading more...</p>}
         </div>
       </section>
     </>
