@@ -61,6 +61,25 @@ describe("AuthProvider", () => {
     expect(context.token).toBeNull();
   });
 
+  it("handles localStorage access errors gracefully", async () => {
+    const spy = jest
+      .spyOn(Storage.prototype, "getItem")
+      .mockImplementation(() => {
+        throw new Error("quota exceeded");
+      });
+
+    await act(async () => {
+      root.render(
+        <AuthProvider>
+          <TestComponent />
+        </AuthProvider>
+      );
+    });
+
+    expect(context.token).toBeNull();
+    spy.mockRestore();
+  });
+
   it("setToken updates token and localStorage", async () => {
     await act(async () => {
       root.render(
