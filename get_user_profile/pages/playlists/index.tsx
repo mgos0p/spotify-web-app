@@ -28,11 +28,17 @@ export default function PlaylistsPage() {
           50,
           offset
         );
-        //   setPlaylists(playlistsData);
-        setPlaylists((prev) => ({
-          ...playlistsData,
-          items: [...(prev?.items || []), ...playlistsData.items],
-        }));
+        // Deduplicate playlists by ID before updating state
+        setPlaylists((prev) => {
+          const existingItems = prev?.items || [];
+          const newItems = playlistsData.items.filter(
+            (item) => !existingItems.some((p) => p.id === item.id)
+          );
+          return {
+            ...playlistsData,
+            items: [...existingItems, ...newItems],
+          };
+        });
         setOffset((prevOffset) => prevOffset + playlistsData.items.length);
         setHasMore(playlistsData.items.length > 0);
       }

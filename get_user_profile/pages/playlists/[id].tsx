@@ -73,6 +73,14 @@ const PlaylistDetailPage = () => {
           playlistDetail.tracks.next
         );
 
+        // Deduplicate tracks by ID before updating state
+        const uniqueItems = tracks.items.filter(
+          (item) =>
+            !playlistDetail.tracks.items.some(
+              (existing) => existing.track.id === item.track.id
+            )
+        );
+
         // プレイリスト情報を更新（トラックを追加し next を更新）
         setPlaylistDetail((prev) =>
           prev
@@ -80,7 +88,7 @@ const PlaylistDetailPage = () => {
                 ...prev,
                 tracks: {
                   ...prev.tracks,
-                  items: [...prev.tracks.items, ...tracks.items],
+                  items: [...prev.tracks.items, ...uniqueItems],
                   next: tracks.next,
                   previous: tracks.previous,
                 },
@@ -89,7 +97,7 @@ const PlaylistDetailPage = () => {
         );
 
         // 新しく取得したトラックの音響特徴量を取得
-        const featuresPromises = tracks.items.map((item) =>
+        const featuresPromises = uniqueItems.map((item) =>
           fetchAudioFeatures(storedAccessToken, item.track.id)
         );
         const features = await Promise.all(featuresPromises);
