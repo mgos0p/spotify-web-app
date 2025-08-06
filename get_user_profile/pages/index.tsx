@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { Profile } from "../components/profile";
+import { Loader } from "../components/loader";
 import { fetchProfile } from "../pages/api/profile";
 import {
   redirectToAuthCodeFlow,
@@ -63,7 +64,7 @@ export default function Home() {
     return <div>{error}</div>;
   }
   if (!profile) {
-    return <div>Loading...</div>;
+    return <Loader />;
   }
   return (
     <div>

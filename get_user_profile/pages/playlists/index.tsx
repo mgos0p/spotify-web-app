@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Playlists } from "../../components/playlists";
+import { Loader } from "../../components/loader";
 import { fetchPlaylists } from "../../pages/api/playlist";
 import { redirectToAuthCodeFlow } from "../../src/authCodeWithPkce";
 
@@ -80,7 +81,7 @@ export default function PlaylistsPage() {
   }, [hasMore, loading]);
 
   if (!playlists) {
-    return <div>Loading...</div>;
+    return <Loader />;
   }
   return (
     <div>
