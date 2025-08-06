@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import { fetchPlaylist, fetchPlaylistItems } from "../api/playlist";
-import { fetchAudioFeatures } from "../api/track";
-import { PlaylistDetail } from "../../components/playlistDetail";
-import { Loader } from "../../components/loader";
-import { redirectToAuthCodeFlow } from "../../src/authCodeWithPkce";
+import { fetchPlaylist, fetchPlaylistItems } from "../../api/playlist";
+import { fetchAudioFeatures } from "../../api/track";
+import { PlaylistDetail } from "../../../components/playlistDetail";
+import { Loader } from "../../../components/loader";
+import { redirectToAuthCodeFlow } from "../../../src/authCodeWithPkce";
 
 const clientId = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID;
 
