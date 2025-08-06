@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Playlists } from "../../components/playlists";
 import { fetchPlaylists } from "../../pages/api/playlist";
-import { redirectToAuthCodeFlow } from "../../../get_user_profile/src/authCodeWithPkce";
+import { redirectToAuthCodeFlow } from "../../src/authCodeWithPkce";
+
 import { useRouter } from "next/router";
+import { useAuth } from "../../src/AuthContext";
 
 const clientId = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID;
 export default function PlaylistsPage() {
@@ -10,6 +12,7 @@ export default function PlaylistsPage() {
     null
   );
   const router = useRouter();
+  const { token } = useAuth();
   const [loading, setLoading] = useState(false);
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
@@ -18,8 +21,7 @@ export default function PlaylistsPage() {
     if (!clientId || !hasMore || loading) return;
     setLoading(true);
     try {
-      const storedAccessToken = localStorage.getItem("access_token");
-      if (!storedAccessToken) {
+      if (!token) {
         router.push("/");
         redirectToAuthCodeFlow(clientId);
       } else {
@@ -49,7 +51,7 @@ export default function PlaylistsPage() {
   };
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [token]);
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {

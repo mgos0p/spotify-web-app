@@ -5,16 +5,30 @@ import {
   redirectToAuthCodeFlow,
   getAccessToken,
 } from "../../get_user_profile/src/authCodeWithPkce";
-import { useRouter } from "next/router";
+import { useAuth } from "../src/AuthContext";
 
 const clientId = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID;
 export default function Home() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
+  const { token, setToken } = useAuth();
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!clientId) return;
+      if (!clientId) {
+        setError("Missing Spotify Client ID");
+        return;
+      }
+      if (token) {
+        try {
+          const profileData = await fetchProfile(token);
+          setProfile(profileData);
+        } catch (err) {
+          console.error("Failed to fetch profile:", err);
+          setError("Failed to load profile");
+        }
+        return;
+      }
       const params = new URLSearchParams(window.location.search);
       const code = params.get("code");
       if (!code) {
@@ -25,26 +39,21 @@ export default function Home() {
         const accessToken = await getAccessToken(clientId, code);
         if (!accessToken) {
           redirectToAuthCodeFlow(clientId);
+          return;
         }
-        // アクセストークンをローカルストレージから取得
-        const storedAccessToken = localStorage.getItem("access_token");
-        if (storedAccessToken) {
-          const profileData = await fetchProfile(storedAccessToken);
-          setProfile(profileData);
-        } else {
-          redirectToAuthCodeFlow(clientId);
-        }
-        // const profileData = await fetchProfile(accessToken);
-        // console.log(profileData);
-        // setProfile(profileData);
-      } catch (error) {
-        console.error("Failed to fetch profile:", error);
+        setToken(accessToken);
+      } catch (err) {
+        console.error("Failed to fetch profile:", err);
+        setError("Failed to load profile");
       }
     };
 
     fetchData();
-  }, []);
+  }, [token]);
 
+  if (error) {
+    return <div>{error}</div>;
+  }
   if (!profile) {
     return <div>Loading...</div>;
   }
