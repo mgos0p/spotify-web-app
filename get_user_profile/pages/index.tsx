@@ -10,14 +10,23 @@ import { useAuth } from "../src/AuthContext";
 const clientId = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID;
 export default function Home() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const { token, setToken } = useAuth();
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!clientId) return;
+      if (!clientId) {
+        setError("Missing Spotify Client ID");
+        return;
+      }
       if (token) {
-        const profileData = await fetchProfile(token);
-        setProfile(profileData);
+        try {
+          const profileData = await fetchProfile(token);
+          setProfile(profileData);
+        } catch (err) {
+          console.error("Failed to fetch profile:", err);
+          setError("Failed to load profile");
+        }
         return;
       }
       const params = new URLSearchParams(window.location.search);
@@ -33,14 +42,18 @@ export default function Home() {
           return;
         }
         setToken(accessToken);
-      } catch (error) {
-        console.error("Failed to fetch profile:", error);
+      } catch (err) {
+        console.error("Failed to fetch profile:", err);
+        setError("Failed to load profile");
       }
     };
 
     fetchData();
   }, [token]);
 
+  if (error) {
+    return <div>{error}</div>;
+  }
   if (!profile) {
     return <div>Loading...</div>;
   }
