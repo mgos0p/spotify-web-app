@@ -35,3 +35,19 @@ export const fetchAudioFeaturesBatch = async (
       f !== null
   );
 };
+export const fetchAudioAnalysis = async (
+  accessToken: string,
+  trackId: string
+): Promise<SpotifyAudioAnalysisResponse> => {
+  const response = await fetch(
+    `https://api.spotify.com/v1/audio-analysis/${trackId}`,
+    {
+      method: "GET",
+      headers: { Authorization: `Bearer ${accessToken}` },
+    }
+  );
+  if (!response.ok) {
+    throw new Error("Failed to fetch audio analysis");
+  }
+  return await response.json();
+};

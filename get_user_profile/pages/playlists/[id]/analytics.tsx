@@ -4,7 +4,7 @@ import {
   fetchPlaylist,
   fetchPlaylistItems,
 } from "../../api/playlist";
-import { fetchAudioFeaturesBatch } from "../../api/track";
+import { fetchAudioFeaturesBatch, fetchAudioAnalysis } from "../../api/track";
 import { redirectToAuthCodeFlow } from "../../../src/authCodeWithPkce";
 import {
   Chart as ChartJS,
@@ -49,6 +49,29 @@ const getHistogramData = (values: number[], bins = 10) => {
   };
 };
 
+const getSectionsChartData = (
+  playlist: SpotifyPlaylistResponse | null,
+  analysis: { [key: string]: SpotifyAudioAnalysisResponse }
+) => {
+  if (!playlist || !playlist.tracks) {
+    return { labels: [], datasets: [] };
+  }
+  const labels = playlist.tracks.items.map((item) => item.track.name);
+  const data = playlist.tracks.items.map(
+    (item) => analysis[item.track.id]?.sections.length ?? 0
+  );
+  return {
+    labels,
+    datasets: [
+      {
+        label: "Sections",
+        data,
+        backgroundColor: "rgba(16,185,129,0.5)",
+      },
+    ],
+  };
+};
+
 const AnalyticsPage = () => {
   const router = useRouter();
   const { id } = router.query;
@@ -56,6 +79,9 @@ const AnalyticsPage = () => {
 
   const [playlist, setPlaylist] = useState<SpotifyPlaylistResponse | null>(null);
   const [features, setFeatures] = useState<SpotifyAudioFeaturesResponse[]>([]);
+  const [analysis, setAnalysis] = useState<{
+    [key: string]: SpotifyAudioAnalysisResponse;
+  }>({});
   const [loading, setLoading] = useState(false);
 
   const loadInitial = async () => {
@@ -77,6 +103,17 @@ const AnalyticsPage = () => {
       if (ids.length > 0) {
         const feats = await fetchAudioFeaturesBatch(accessToken, ids);
         setFeatures(feats);
+        const analysisResults = await Promise.all(
+          ids.map((id) => fetchAudioAnalysis(accessToken, id))
+        );
+        const analysisMap = ids.reduce(
+          (acc, id, idx) => {
+            acc[id] = analysisResults[idx];
+            return acc;
+          },
+          {} as { [key: string]: SpotifyAudioAnalysisResponse }
+        );
+        setAnalysis(analysisMap);
       }
     } catch (e) {
       console.error("Failed to load analytics", e);
@@ -126,6 +163,16 @@ const AnalyticsPage = () => {
       if (ids.length > 0) {
         const feats = await fetchAudioFeaturesBatch(accessToken, ids);
         setFeatures((prev) => [...prev, ...feats]);
+        const analysisResults = await Promise.all(
+          ids.map((id) => fetchAudioAnalysis(accessToken, id))
+        );
+        setAnalysis((prev) => {
+          const next = { ...prev };
+          ids.forEach((id, idx) => {
+            next[id] = analysisResults[idx];
+          });
+          return next;
+        });
       }
     } catch (e) {
       console.error("Failed to load more tracks", e);
@@ -142,9 +189,19 @@ const AnalyticsPage = () => {
           {featureDefinitions.map((f) => (
             <div key={f.key}>
               <h3 className="mb-2 font-semibold">{f.label}</h3>
-              <Bar data={getHistogramData(features.map((feat) => feat[f.key] as number))} />
+              <Bar
+                data={getHistogramData(
+                  features.map((feat) => feat[f.key] as number)
+                )}
+              />
             </div>
           ))}
+          {Object.keys(analysis).length > 0 && (
+            <div>
+              <h3 className="mb-2 font-semibold">Sections per Track</h3>
+              <Bar data={getSectionsChartData(playlist, analysis)} />
+            </div>
+          )}
         </div>
       )}
       {playlist?.tracks?.next && (
