@@ -47,7 +47,9 @@ export const PlaylistDetail: React.FC<PlaylistDetailProps> = ({
         <h2 className="text-2xl font-bold mb-4">
           Playlist: {playlistDetail.name}
         </h2>
-        <div className="space-y-4">
+        <div
+          className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 3xl:grid-cols-7 4xl:grid-cols-8"
+        >
           {playlistDetail.tracks?.items?.map((item, index) => {
             const features = trackFeatures[item.track.id];
             return (
