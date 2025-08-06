@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useRouter } from "next/router";
 import { Profile } from "../components/profile";
 import { fetchProfile } from "../pages/api/profile";
 import {
@@ -11,6 +12,7 @@ const clientId = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID;
 export default function Home() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
   const { token, setToken } = useAuth();
 
   useEffect(() => {
@@ -42,6 +44,12 @@ export default function Home() {
           return;
         }
         setToken(accessToken);
+        const redirectPath = localStorage.getItem("redirect_path");
+        if (redirectPath && redirectPath !== router.pathname) {
+          localStorage.removeItem("redirect_path");
+          router.push(redirectPath);
+          return;
+        }
       } catch (err) {
         console.error("Failed to fetch profile:", err);
         setError("Failed to load profile");
