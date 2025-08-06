@@ -38,10 +38,13 @@ const PlaylistDetailPage = () => {
           setPlaylistDetail(playlistData);
 
           // トラックの音響特徴量を取得
-          const featuresPromises =
-            playlistData.tracks?.items?.map((track) =>
-              fetchAudioFeatures(accessToken, track.track.id)
+          const validItems =
+            playlistData.tracks?.items?.filter(
+              (t) => t.track && t.track.id && t.track.type === "track"
             ) ?? [];
+          const featuresPromises = validItems.map((item) =>
+            fetchAudioFeatures(accessToken, item.track.id)
+          );
           const features = await Promise.all(featuresPromises);
           const featuresMap = features.reduce((acc, feature) => {
             acc[feature.id] = feature;
@@ -76,8 +79,12 @@ const PlaylistDetailPage = () => {
         // Deduplicate tracks by ID before updating state
         const uniqueItems = tracks.items.filter(
           (item) =>
+            item.track &&
+            item.track.id &&
+            item.track.type === "track" &&
             !playlistDetail.tracks!.items.some(
-              (existing) => existing.track.id === item.track.id
+              (existing) =>
+                existing.track && existing.track.id === item.track!.id
             )
         );
 
@@ -98,7 +105,7 @@ const PlaylistDetailPage = () => {
 
         // 新しく取得したトラックの音響特徴量を取得
         const featuresPromises = uniqueItems.map((item) =>
-          fetchAudioFeatures(storedAccessToken, item.track.id)
+          fetchAudioFeatures(storedAccessToken, item.track!.id)
         );
         const features = await Promise.all(featuresPromises);
         const featuresMap = features.reduce((acc, feature) => {
