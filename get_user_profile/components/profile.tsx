@@ -61,13 +61,20 @@ export const Profile: React.FC<ProfileProps> = ({ profile }) => {
         className="bg-gray-700 text-white p-4 rounded-lg shadow my-4 mx-auto max-w-4xl"
       >
         <h2 className="text-xl font-bold mb-2">Pages</h2>
-        <ul className="list-none">
-          <li>
-            <a href="/playlists" className="text-blue-400 hover:text-blue-300">
-              playlists
-            </a>
-          </li>
-        </ul>
+        <div className="flex space-x-4">
+          <a
+            href="/playlists"
+            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+          >
+            Playlists
+          </a>
+          <a
+            href="/web-player"
+            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded"
+          >
+            Web Player
+          </a>
+        </div>
       </section>
     </>
   );
