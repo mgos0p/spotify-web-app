@@ -12,7 +12,9 @@ const redirectUrl = "eg:http://localhost:8080"; // your redirect URL - must be l
 
 const authorizationEndpoint = "https://accounts.spotify.com/authorize";
 const tokenEndpoint = "https://accounts.spotify.com/api/token";
-("user-read-private user-read-email user-read-currently-playing user-read-playback-state user-modify-playback-state app-remote-control playlist-read-private user-read-playback-position user-library-read");
+// user-personalizedはだめっぽい
+const scope =
+  "user-read-private user-read-email user-read-currently-playing user-read-playback-state user-modify-playback-state app-remote-control streaming playlist-read-private user-read-playback-position user-library-read";
 // const scope = "user-read-private user-read-email";
 
 // Data structure that manages the current active token, caching it in localStorage
