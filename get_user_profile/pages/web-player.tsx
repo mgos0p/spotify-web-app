@@ -13,8 +13,7 @@ import {
   previousTrack,
 } from "./api/player";
 import { redirectToAuthCodeFlow } from "../src/authCodeWithPkce";
-import { Player } from "../components/player";
-import { PlaylistList } from "../components/playlistList";
+import { WebPlayer } from "../components/webPlayer";
 
 const clientId = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID;
 
@@ -85,14 +84,16 @@ export default function WebPlayerPage() {
     if (!token) return;
     const detail = await fetchPlaylist(token, pl.id, 50, 0);
     setSelected(detail);
-    const firstPlayable = detail.tracks.items.findIndex(
-      (t) => t.track.is_playable !== false
-    );
+    const firstPlayable =
+      detail.tracks?.items.findIndex(
+        (t) => t.track.is_playable !== false
+      ) ?? 0;
     setCurrentTrackIndex(firstPlayable === -1 ? 0 : firstPlayable);
     setIsPlaying(false);
   };
 
-  const currentTrack = selected?.tracks?.items[currentTrackIndex]?.track;
+  const currentTrack =
+    selected?.tracks?.items[currentTrackIndex]?.track ?? null;
 
   const togglePlay = async () => {
     if (!token || !selected || !deviceId) return;
@@ -140,35 +141,19 @@ export default function WebPlayerPage() {
   if (!playlists) {
     return <Loader />;
   }
-
   return (
-    <div className="relative text-white">
-      {/*
-        Player is positioned fixed and uses translateY to slide in/out. The
-        transition classes provide the smooth "drop from top" effect when a
-        playlist has been selected.
-      */}
-      <Player
-        visible={!!selected}
-        track={currentTrack ?? null}
-        isPlaying={isPlaying}
-        controlsDisabled={controlsDisabled}
-        onTogglePlay={togglePlay}
-        onPrev={playPrev}
-        onNext={playNext}
-        onClose={closePlayer}
-      />
-      {deviceError && (
-        <p className="text-center text-red-500 mt-4">{deviceError}</p>
-      )}
-      {/*
-        When the modal is open it occupies half the viewport height. Adding
-        pt-[50vh] pushes the playlist list below it; when hidden, the padding is
-        removed to reclaim the space.
-      */}
-      <div className={selected ? "pt-[50vh]" : ""}>
-        <PlaylistList playlists={playlists} onSelect={openPlaylist} />
-      </div>
-    </div>
+    <WebPlayer
+      playlists={playlists}
+      selected={selected}
+      currentTrack={currentTrack}
+      isPlaying={isPlaying}
+      controlsDisabled={controlsDisabled}
+      deviceError={deviceError}
+      onTogglePlay={togglePlay}
+      onPrev={playPrev}
+      onNext={playNext}
+      onClose={closePlayer}
+      onSelectPlaylist={openPlaylist}
+    />
   );
 }
