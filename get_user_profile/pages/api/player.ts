@@ -13,7 +13,7 @@ const fetchWithRetry = async (
 };
 
 export const fetchPlayerState = async (code: string): Promise<any | null> => {
-  const res = await fetchWithRetry("https://api.spotify.com/v1/me/player", {
+  const res = await fetch("https://api.spotify.com/v1/me/player", {
     method: "GET",
     headers: { Authorization: `Bearer ${code}` },
   });
@@ -24,13 +24,10 @@ export const fetchPlayerState = async (code: string): Promise<any | null> => {
 };
 
 export const fetchAvailableDevices = async (code: string): Promise<any[]> => {
-  const res = await fetchWithRetry(
-    "https://api.spotify.com/v1/me/player/devices",
-    {
-      method: "GET",
-      headers: { Authorization: `Bearer ${code}` },
-    }
-  );
+  const res = await fetch("https://api.spotify.com/v1/me/player/devices", {
+    method: "GET",
+    headers: { Authorization: `Bearer ${code}` },
+  });
   const data = await res.json();
   return Array.isArray(data.devices) ? data.devices : [];
 };
@@ -41,7 +38,7 @@ export const startPlayback = async (
   contextUri: string,
   offset: number
 ): Promise<void> => {
-  await fetchWithRetry(
+  await fetch(
     `https://api.spotify.com/v1/me/player/play${
       deviceId ? `?device_id=${deviceId}` : ""
     }`,
@@ -63,7 +60,7 @@ export const pausePlayback = async (
   token: string,
   deviceId: string
 ): Promise<void> => {
-  await fetchWithRetry(
+  await fetch(
     `https://api.spotify.com/v1/me/player/pause${
       deviceId ? `?device_id=${deviceId}` : ""
     }`,
@@ -78,7 +75,7 @@ export const nextTrack = async (
   token: string,
   deviceId: string
 ): Promise<void> => {
-  await fetchWithRetry(
+  await fetch(
     `https://api.spotify.com/v1/me/player/next${
       deviceId ? `?device_id=${deviceId}` : ""
     }`,
@@ -93,7 +90,7 @@ export const previousTrack = async (
   token: string,
   deviceId: string
 ): Promise<void> => {
-  await fetchWithRetry(
+  await fetch(
     `https://api.spotify.com/v1/me/player/previous${
       deviceId ? `?device_id=${deviceId}` : ""
     }`,

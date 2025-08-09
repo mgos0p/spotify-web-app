@@ -137,7 +137,9 @@
             var state = generateRandomString(16);
 
             localStorage.setItem(stateKey, state);
-            var scope = 'user-read-private user-read-email';
+            // user-personalizedはだめっぽい
+            var scope = "user-read-private user-read-email user-read-currently-playing user-read-playback-state user-modify-playback-state app-remote-control playlist-read-private user-read-playback-position user-library-read";
+            // var scope = "user-read-private user-read-email";
 
             var url = 'https://accounts.spotify.com/authorize';
             url += '?response_type=token';

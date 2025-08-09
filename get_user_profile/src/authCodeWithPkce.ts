@@ -14,7 +14,12 @@ export async function redirectToAuthCodeFlow(clientId: string) {
   params.append("response_type", "code");
   //   params.append("redirect_uri", "http://localhost:5175/callback");
   params.append("redirect_uri", "http://localhost:3000/callback");
-  params.append("scope", "user-read-private user-read-email");
+  // user-personalizedはだめっぽい
+  params.append(
+    "scope",
+    "user-read-private user-read-email user-read-currently-playing user-read-playback-state user-modify-playback-state app-remote-control playlist-read-private user-read-playback-position user-library-read"
+  );
+  // params.append("scope", "user-read-private user-read-email");
   params.append("code_challenge_method", "S256");
   params.append("code_challenge", challenge);
 
