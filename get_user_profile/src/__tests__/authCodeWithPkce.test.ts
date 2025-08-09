@@ -1,7 +1,9 @@
 import { generateCodeVerifier, generateCodeChallenge } from "../authCodeWithPkce";
 
 beforeAll(() => {
-  (global as any).window = { crypto: global.crypto };
+  const webcrypto = require("crypto").webcrypto;
+  (global as any).crypto = webcrypto;
+  (global as any).window = { crypto: webcrypto };
 });
 
 describe("generateCodeVerifier", () => {

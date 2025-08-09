@@ -96,12 +96,17 @@ export default function WebPlayerPage() {
     selected?.tracks?.items[currentTrackIndex]?.track ?? null;
 
   const togglePlay = async () => {
-    if (!token || !selected || !deviceId) return;
+    if (!token || !selected) return;
     if (isPlaying) {
-      await pausePlayback(token, deviceId);
+      await pausePlayback(token, deviceId ?? undefined);
       setIsPlaying(false);
     } else {
-      await startPlayback(token, deviceId, selected.uri, currentTrackIndex);
+      await startPlayback(
+        token,
+        deviceId ?? undefined,
+        selected.uri,
+        currentTrackIndex
+      );
       setIsPlaying(true);
     }
   };
@@ -117,15 +122,15 @@ export default function WebPlayerPage() {
   };
 
   const playNext = async () => {
-    if (!token || !selected?.tracks || !deviceId) return;
-    await nextTrack(token, deviceId);
+    if (!token || !selected?.tracks) return;
+    await nextTrack(token, deviceId ?? undefined);
     setCurrentTrackIndex(findPlayableIndex(currentTrackIndex, 1));
     setIsPlaying(true);
   };
 
   const playPrev = async () => {
-    if (!token || !selected?.tracks || !deviceId) return;
-    await previousTrack(token, deviceId);
+    if (!token || !selected?.tracks) return;
+    await previousTrack(token, deviceId ?? undefined);
     setCurrentTrackIndex(findPlayableIndex(currentTrackIndex, -1));
     setIsPlaying(true);
   };
@@ -133,8 +138,8 @@ export default function WebPlayerPage() {
   const closePlayer = async () => {
     setSelected(null);
     setIsPlaying(false);
-    if (token && deviceId) {
-      await pausePlayback(token, deviceId);
+    if (token) {
+      await pausePlayback(token, deviceId ?? undefined);
     }
   };
 

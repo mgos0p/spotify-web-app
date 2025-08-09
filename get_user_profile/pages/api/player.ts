@@ -34,7 +34,7 @@ export const fetchAvailableDevices = async (code: string): Promise<any[]> => {
 
 export const startPlayback = async (
   token: string,
-  deviceId: string,
+  deviceId?: string,
   contextUri: string,
   offset: number
 ): Promise<void> => {
@@ -58,7 +58,7 @@ export const startPlayback = async (
 
 export const pausePlayback = async (
   token: string,
-  deviceId: string
+  deviceId?: string
 ): Promise<void> => {
   await fetch(
     `https://api.spotify.com/v1/me/player/pause${
@@ -73,7 +73,7 @@ export const pausePlayback = async (
 
 export const nextTrack = async (
   token: string,
-  deviceId: string
+  deviceId?: string
 ): Promise<void> => {
   await fetch(
     `https://api.spotify.com/v1/me/player/next${
@@ -88,7 +88,7 @@ export const nextTrack = async (
 
 export const previousTrack = async (
   token: string,
-  deviceId: string
+  deviceId?: string
 ): Promise<void> => {
   await fetch(
     `https://api.spotify.com/v1/me/player/previous${
