@@ -51,15 +51,16 @@ export default function WebPlayerPage() {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      if (!data.devices || data.devices.length === 0) {
+      const devices = Array.isArray(data?.devices) ? data.devices : [];
+      if (devices.length === 0) {
         setDeviceError(
           "No active Spotify device found. Please open Spotify on a device."
         );
         setDeviceId(null);
         return;
       }
-      const active = data.devices.find((d: any) => d.is_active);
-      const id = active ? active.id : data.devices[0].id;
+      const active = devices.find((d: any) => d.is_active);
+      const id = active ? active.id : devices[0].id;
       setDeviceId(id);
       setDeviceError(null);
     };
