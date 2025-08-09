@@ -39,12 +39,16 @@ export default function Home() {
         return;
       }
       try {
-        const accessToken = await getAccessToken(clientId, code);
-        if (!accessToken) {
+        const tokenData = await getAccessToken(clientId, code);
+        if (!tokenData || !tokenData.access_token) {
           redirectToAuthCodeFlow(clientId);
           return;
         }
-        setToken(accessToken);
+        setToken(
+          tokenData.access_token,
+          tokenData.refresh_token,
+          tokenData.expires_in
+        );
         const redirectPath = localStorage.getItem("redirect_path");
         if (redirectPath && redirectPath !== router.pathname) {
           localStorage.removeItem("redirect_path");
