@@ -1,10 +1,20 @@
+// Web player page that lists user playlists and, upon selection, opens a
+// slide-in Player modal for controlling playback via Spotify's Web API.
+// The modal consumes the first playable track of the chosen playlist.
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../src/AuthContext";
 import { Loader } from "../components/loader";
 import { fetchPlaylists, fetchPlaylist } from "./api/playlist";
-import { fetchPlayerState } from "./api/player";
+import {
+  fetchPlayerState,
+  startPlayback,
+  pausePlayback,
+  nextTrack,
+  previousTrack,
+} from "./api/player";
 import { redirectToAuthCodeFlow } from "../src/authCodeWithPkce";
-import { FaPlay, FaPause, FaStepBackward, FaStepForward } from "react-icons/fa";
+import { Player } from "../components/player";
+import { PlaylistList } from "../components/playlistList";
 
 const clientId = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID;
 
@@ -18,10 +28,9 @@ export default function WebPlayerPage() {
   );
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [showImage, setShowImage] = useState(false);
   const [deviceId, setDeviceId] = useState<string | null>(null);
   const [deviceError, setDeviceError] = useState<string | null>(null);
-  const [controlsDisabled, setControlsDisabled] = useState(false);
+  const controlsDisabled = !deviceId;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -44,6 +53,8 @@ export default function WebPlayerPage() {
 
   useEffect(() => {
     if (!token) return;
+    let attempts = 0;
+    let interval: NodeJS.Timeout;
 
     const updatePlayback = async () => {
       const data = await fetchPlayerState(token);
@@ -53,15 +64,20 @@ export default function WebPlayerPage() {
         );
         setDeviceId(null);
         setIsPlaying(false);
+        attempts++;
+        if (attempts >= 3) {
+          clearInterval(interval);
+        }
         return;
       }
       setDeviceId(data.device.id);
       setIsPlaying(data.is_playing);
       setDeviceError(null);
+      attempts = 0;
     };
 
     updatePlayback();
-    const interval = setInterval(updatePlayback, 5000);
+    interval = setInterval(updatePlayback, 5000);
     return () => clearInterval(interval);
   }, [token]);
 
@@ -81,33 +97,10 @@ export default function WebPlayerPage() {
   const togglePlay = async () => {
     if (!token || !selected || !deviceId) return;
     if (isPlaying) {
-      await fetch(
-        `https://api.spotify.com/v1/me/player/pause${
-          deviceId ? `?device_id=${deviceId}` : ""
-        }`,
-        {
-          method: "PUT",
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      await pausePlayback(token, deviceId);
       setIsPlaying(false);
     } else {
-      await fetch(
-        `https://api.spotify.com/v1/me/player/play${
-          deviceId ? `?device_id=${deviceId}` : ""
-        }`,
-        {
-          method: "PUT",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            context_uri: selected.uri,
-            offset: { position: currentTrackIndex },
-          }),
-        }
-      );
+      await startPlayback(token, deviceId, selected.uri, currentTrackIndex);
       setIsPlaying(true);
     }
   };
@@ -124,30 +117,14 @@ export default function WebPlayerPage() {
 
   const playNext = async () => {
     if (!token || !selected?.tracks || !deviceId) return;
-    await fetch(
-      `https://api.spotify.com/v1/me/player/next${
-        deviceId ? `?device_id=${deviceId}` : ""
-      }`,
-      {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
+    await nextTrack(token, deviceId);
     setCurrentTrackIndex(findPlayableIndex(currentTrackIndex, 1));
     setIsPlaying(true);
   };
 
   const playPrev = async () => {
     if (!token || !selected?.tracks || !deviceId) return;
-    await fetch(
-      `https://api.spotify.com/v1/me/player/previous${
-        deviceId ? `?device_id=${deviceId}` : ""
-      }`,
-      {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
+    await previousTrack(token, deviceId);
     setCurrentTrackIndex(findPlayableIndex(currentTrackIndex, -1));
     setIsPlaying(true);
   };
@@ -155,16 +132,8 @@ export default function WebPlayerPage() {
   const closePlayer = async () => {
     setSelected(null);
     setIsPlaying(false);
-    if (token) {
-      await fetch(
-        `https://api.spotify.com/v1/me/player/pause${
-          deviceId ? `?device_id=${deviceId}` : ""
-        }`,
-        {
-          method: "PUT",
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+    if (token && deviceId) {
+      await pausePlayback(token, deviceId);
     }
   };
 
@@ -174,105 +143,32 @@ export default function WebPlayerPage() {
 
   return (
     <div className="relative text-white">
-      <div
-        className={`fixed top-0 left-0 right-0 h-1/2 bg-gray-900 z-10 flex flex-col items-center justify-center transform transition-transform duration-300 ${
-          selected ? "translate-y-0" : "-translate-y-full"
-        }`}
-      >
-        {selected && currentTrack && (
-          <>
-            <button
-              className="absolute top-2 right-2 text-2xl"
-              onClick={closePlayer}
-            >
-              ×
-            </button>
-            {currentTrack.album.images.length > 0 && (
-              <img
-                src={currentTrack.album.images[0].url}
-                alt={currentTrack.name}
-                className="w-48 h-48 object-cover mb-4 cursor-pointer"
-                onClick={() => setShowImage(true)}
-              />
-            )}
-            <div className="flex space-x-6 text-4xl">
-              <FaStepBackward
-                className={
-                  controlsDisabled
-                    ? "opacity-50 cursor-not-allowed"
-                    : "cursor-pointer"
-                }
-                onClick={controlsDisabled ? undefined : playPrev}
-              />
-              {isPlaying ? (
-                <FaPause
-                  className={
-                    controlsDisabled
-                      ? "opacity-50 cursor-not-allowed"
-                      : "cursor-pointer"
-                  }
-                  onClick={controlsDisabled ? undefined : togglePlay}
-                />
-              ) : (
-                <FaPlay
-                  className={
-                    controlsDisabled
-                      ? "opacity-50 cursor-not-allowed"
-                      : "cursor-pointer"
-                  }
-                  onClick={controlsDisabled ? undefined : togglePlay}
-                />
-              )}
-              <FaStepForward
-                className={
-                  controlsDisabled
-                    ? "opacity-50 cursor-not-allowed"
-                    : "cursor-pointer"
-                }
-                onClick={controlsDisabled ? undefined : playNext}
-              />
-            </div>
-          </>
-        )}
-      </div>
-      {showImage && currentTrack && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-20"
-          onClick={() => setShowImage(false)}
-        >
-          <img
-            src={currentTrack.album.images[0].url}
-            alt={currentTrack.name}
-            className="max-w-full max-h-full"
-          />
-        </div>
-      )}
+      {/*
+        Player is positioned fixed and uses translateY to slide in/out. The
+        transition classes provide the smooth "drop from top" effect when a
+        playlist has been selected.
+      */}
+      <Player
+        visible={!!selected}
+        track={currentTrack ?? null}
+        isPlaying={isPlaying}
+        controlsDisabled={controlsDisabled}
+        onTogglePlay={togglePlay}
+        onPrev={playPrev}
+        onNext={playNext}
+        onClose={closePlayer}
+      />
       {deviceError && (
         <p className="text-center text-red-500 mt-4">{deviceError}</p>
       )}
-      <section className={selected ? "pt-[50vh]" : ""}>
-        <h2 className="text-2xl font-bold mb-4">My Playlists</h2>
-        <ul className="list-none space-y-2">
-          {playlists.items.map((pl) => (
-            <li
-              key={pl.id}
-              className="bg-gray-700 hover:bg-gray-600 p-3 rounded-lg flex items-center cursor-pointer"
-              onClick={() => openPlaylist(pl)}
-            >
-              {pl.images.length > 0 && (
-                <img
-                  src={pl.images[0].url}
-                  alt={pl.name}
-                  className="w-16 h-16 mr-4 object-cover rounded"
-                />
-              )}
-              <span className="text-blue-400 hover:text-blue-300 flex-grow">
-                {pl.name}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </section>
+      {/*
+        When the modal is open it occupies half the viewport height. Adding
+        pt-[50vh] pushes the playlist list below it; when hidden, the padding is
+        removed to reclaim the space.
+      */}
+      <div className={selected ? "pt-[50vh]" : ""}>
+        <PlaylistList playlists={playlists} onSelect={openPlaylist} />
+      </div>
     </div>
   );
 }
