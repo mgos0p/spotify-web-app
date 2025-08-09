@@ -1,3 +1,6 @@
+// Web player page that lists user playlists and, upon selection, opens a
+// slide-in Player modal for controlling playback via Spotify's Web API.
+// The modal consumes the first playable track of the chosen playlist.
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../src/AuthContext";
 import { Loader } from "../components/loader";
@@ -140,6 +143,11 @@ export default function WebPlayerPage() {
 
   return (
     <div className="relative text-white">
+      {/*
+        Player is positioned fixed and uses translateY to slide in/out. The
+        transition classes provide the smooth "drop from top" effect when a
+        playlist has been selected.
+      */}
       <Player
         visible={!!selected}
         track={currentTrack ?? null}
@@ -153,6 +161,11 @@ export default function WebPlayerPage() {
       {deviceError && (
         <p className="text-center text-red-500 mt-4">{deviceError}</p>
       )}
+      {/*
+        When the modal is open it occupies half the viewport height. Adding
+        pt-[50vh] pushes the playlist list below it; when hidden, the padding is
+        removed to reclaim the space.
+      */}
       <div className={selected ? "pt-[50vh]" : ""}>
         <PlaylistList playlists={playlists} onSelect={openPlaylist} />
       </div>
