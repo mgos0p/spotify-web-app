@@ -1,26 +1,29 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useAuth } from "../src/AuthContext";
 import { Loader } from "../components/loader";
 import { fetchPlaylists, fetchPlaylist } from "./api/playlist";
-import { redirectToAuthCodeFlow } from "../src/authCodeWithPkce";
 import {
-  FaPlay,
-  FaPause,
-  FaStepBackward,
-  FaStepForward,
-} from "react-icons/fa";
+  fetchPlayerState,
+  startPlayback,
+  pausePlayback,
+  nextTrack,
+  previousTrack,
+} from "./api/player";
+import { redirectToAuthCodeFlow } from "../src/authCodeWithPkce";
+import { Player } from "../components/player";
+import { PlaylistList } from "../components/playlistList";
 
 const clientId = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID;
 
 export default function WebPlayerPage() {
   const { token, setToken } = useAuth();
   const [playlists, setPlaylists] = useState<SpotifyPlaylistsResponse | null>(null);
-  const [selected, setSelected] =
-    useState<SpotifyPlaylistResponse | null>(null);
+  const [selected, setSelected] = useState<SpotifyPlaylistResponse | null>(null);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [showImage, setShowImage] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [deviceId, setDeviceId] = useState<string | null>(null);
+  const [deviceError, setDeviceError] = useState<string | null>(null);
+  const controlsDisabled = !deviceId;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -41,59 +44,93 @@ export default function WebPlayerPage() {
     fetchData();
   }, [token]);
 
+  useEffect(() => {
+    if (!token) return;
+    let attempts = 0;
+    let interval: NodeJS.Timeout;
+
+    const updatePlayback = async () => {
+      const data = await fetchPlayerState(token);
+      if (!data || !data.device) {
+        setDeviceError(
+          "No active Spotify device found. Please open Spotify on a device."
+        );
+        setDeviceId(null);
+        setIsPlaying(false);
+        attempts++;
+        if (attempts >= 3) {
+          clearInterval(interval);
+        }
+        return;
+      }
+      setDeviceId(data.device.id);
+      setIsPlaying(data.is_playing);
+      setDeviceError(null);
+      attempts = 0;
+    };
+
+    updatePlayback();
+    interval = setInterval(updatePlayback, 5000);
+    return () => clearInterval(interval);
+  }, [token]);
+
   const openPlaylist = async (pl: SpotifyPlaylistResponse) => {
     if (!token) return;
     const detail = await fetchPlaylist(token, pl.id, 50, 0);
     setSelected(detail);
-    setCurrentTrackIndex(0);
+    const firstPlayable = detail.tracks.items.findIndex(
+      (t) => t.track.is_playable !== false
+    );
+    setCurrentTrackIndex(firstPlayable === -1 ? 0 : firstPlayable);
     setIsPlaying(false);
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current = null;
-    }
   };
 
-  const currentTrack =
-    selected?.tracks?.items[currentTrackIndex]?.track;
+  const currentTrack = selected?.tracks?.items[currentTrackIndex]?.track;
 
-  useEffect(() => {
-    if (!currentTrack?.preview_url) return;
-    if (!audioRef.current) {
-      audioRef.current = new Audio(currentTrack.preview_url);
-    } else {
-      audioRef.current.src = currentTrack.preview_url;
-    }
+  const togglePlay = async () => {
+    if (!token || !selected || !deviceId) return;
     if (isPlaying) {
-      audioRef.current.play();
-    }
-  }, [currentTrack]);
-
-  const togglePlay = () => {
-    if (!audioRef.current) return;
-    if (isPlaying) {
-      audioRef.current.pause();
+      await pausePlayback(token, deviceId);
       setIsPlaying(false);
     } else {
-      audioRef.current.play();
+      await startPlayback(token, deviceId, selected.uri, currentTrackIndex);
       setIsPlaying(true);
     }
   };
 
-  const playNext = () => {
-    if (!selected?.tracks) return;
-    setCurrentTrackIndex(
-      (currentTrackIndex + 1) % selected.tracks.items.length
-    );
-    setIsPlaying(false);
+  const findPlayableIndex = (
+    start: number,
+    direction: 1 | -1
+  ): number => {
+    if (!selected?.tracks) return start;
+    const items = selected.tracks.items;
+    let idx = start;
+    do {
+      idx = (idx + direction + items.length) % items.length;
+    } while (items[idx].track.is_playable === false && idx !== start);
+    return idx;
   };
 
-  const playPrev = () => {
-    if (!selected?.tracks) return;
-    setCurrentTrackIndex(
-      (currentTrackIndex - 1 + selected.tracks.items.length) %
-        selected.tracks.items.length
-    );
+  const playNext = async () => {
+    if (!token || !selected?.tracks || !deviceId) return;
+    await nextTrack(token, deviceId);
+    setCurrentTrackIndex(findPlayableIndex(currentTrackIndex, 1));
+    setIsPlaying(true);
+  };
+
+  const playPrev = async () => {
+    if (!token || !selected?.tracks || !deviceId) return;
+    await previousTrack(token, deviceId);
+    setCurrentTrackIndex(findPlayableIndex(currentTrackIndex, -1));
+    setIsPlaying(true);
+  };
+
+  const closePlayer = async () => {
+    setSelected(null);
     setIsPlaying(false);
+    if (token && deviceId) {
+      await pausePlayback(token, deviceId);
+    }
   };
 
   if (!playlists) {
@@ -102,62 +139,22 @@ export default function WebPlayerPage() {
 
   return (
     <div className="relative text-white">
-      {selected && currentTrack && (
-        <div className="fixed top-0 left-0 right-0 h-1/2 bg-gray-900 z-10 flex flex-col items-center justify-center">
-          {currentTrack.album.images.length > 0 && (
-            <img
-              src={currentTrack.album.images[0].url}
-              alt={currentTrack.name}
-              className="w-48 h-48 object-cover mb-4 cursor-pointer"
-              onClick={() => setShowImage(true)}
-            />
-          )}
-          <div className="flex space-x-6 text-4xl">
-            <FaStepBackward className="cursor-pointer" onClick={playPrev} />
-            {isPlaying ? (
-              <FaPause className="cursor-pointer" onClick={togglePlay} />
-            ) : (
-              <FaPlay className="cursor-pointer" onClick={togglePlay} />
-            )}
-            <FaStepForward className="cursor-pointer" onClick={playNext} />
-          </div>
-        </div>
+      <Player
+        visible={!!selected}
+        track={currentTrack ?? null}
+        isPlaying={isPlaying}
+        controlsDisabled={controlsDisabled}
+        onTogglePlay={togglePlay}
+        onPrev={playPrev}
+        onNext={playNext}
+        onClose={closePlayer}
+      />
+      {deviceError && (
+        <p className="text-center text-red-500 mt-4">{deviceError}</p>
       )}
-      {showImage && currentTrack && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-20"
-          onClick={() => setShowImage(false)}
-        >
-          <img
-            src={currentTrack.album.images[0].url}
-            alt={currentTrack.name}
-            className="max-w-full max-h-full"
-          />
-        </div>
-      )}
-      <section className="pt-[50vh]">
-        <h2 className="text-2xl font-bold mb-4">My Playlists</h2>
-        <ul className="list-none space-y-2">
-          {playlists.items.map((pl) => (
-            <li
-              key={pl.id}
-              className="bg-gray-700 hover:bg-gray-600 p-3 rounded-lg flex items-center cursor-pointer"
-              onClick={() => openPlaylist(pl)}
-            >
-              {pl.images.length > 0 && (
-                <img
-                  src={pl.images[0].url}
-                  alt={pl.name}
-                  className="w-16 h-16 mr-4 object-cover rounded"
-                />
-              )}
-              <span className="text-blue-400 hover:text-blue-300 flex-grow">
-                {pl.name}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </section>
+      <div className={selected ? "pt-[50vh]" : ""}>
+        <PlaylistList playlists={playlists} onSelect={openPlaylist} />
+      </div>
     </div>
   );
 }
