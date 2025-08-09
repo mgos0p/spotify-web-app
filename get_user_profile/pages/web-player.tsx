@@ -4,26 +4,24 @@ import { Loader } from "../components/loader";
 import { fetchPlaylists, fetchPlaylist } from "./api/playlist";
 import { fetchPlayerState } from "./api/player";
 import { redirectToAuthCodeFlow } from "../src/authCodeWithPkce";
-import {
-  FaPlay,
-  FaPause,
-  FaStepBackward,
-  FaStepForward,
-} from "react-icons/fa";
+import { FaPlay, FaPause, FaStepBackward, FaStepForward } from "react-icons/fa";
 
 const clientId = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID;
 
 export default function WebPlayerPage() {
   const { token, setToken } = useAuth();
-  const [playlists, setPlaylists] = useState<SpotifyPlaylistsResponse | null>(null);
-  const [selected, setSelected] =
-    useState<SpotifyPlaylistResponse | null>(null);
+  const [playlists, setPlaylists] = useState<SpotifyPlaylistsResponse | null>(
+    null
+  );
+  const [selected, setSelected] = useState<SpotifyPlaylistResponse | null>(
+    null
+  );
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showImage, setShowImage] = useState(false);
   const [deviceId, setDeviceId] = useState<string | null>(null);
   const [deviceError, setDeviceError] = useState<string | null>(null);
-  const controlsDisabled = !deviceId;
+  const [controlsDisabled, setControlsDisabled] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -78,8 +76,7 @@ export default function WebPlayerPage() {
     setIsPlaying(false);
   };
 
-  const currentTrack =
-    selected?.tracks?.items[currentTrackIndex]?.track;
+  const currentTrack = selected?.tracks?.items[currentTrackIndex]?.track;
 
   const togglePlay = async () => {
     if (!token || !selected || !deviceId) return;
@@ -115,10 +112,7 @@ export default function WebPlayerPage() {
     }
   };
 
-  const findPlayableIndex = (
-    start: number,
-    direction: 1 | -1
-  ): number => {
+  const findPlayableIndex = (start: number, direction: 1 | -1): number => {
     if (!selected?.tracks) return start;
     const items = selected.tracks.items;
     let idx = start;
@@ -181,7 +175,9 @@ export default function WebPlayerPage() {
   return (
     <div className="relative text-white">
       <div
-        className={`fixed top-0 left-0 right-0 h-1/2 bg-gray-900 z-10 flex flex-col items-center justify-center transform transition-transform duration-300 ${selected ? "translate-y-0" : "-translate-y-full"}`}
+        className={`fixed top-0 left-0 right-0 h-1/2 bg-gray-900 z-10 flex flex-col items-center justify-center transform transition-transform duration-300 ${
+          selected ? "translate-y-0" : "-translate-y-full"
+        }`}
       >
         {selected && currentTrack && (
           <>
