@@ -45,7 +45,10 @@ export default function WebPlayerPage() {
     if (!token) return;
     const detail = await fetchPlaylist(token, pl.id, 50, 0);
     setSelected(detail);
-    setCurrentTrackIndex(0);
+    const firstPlayable = detail.tracks.items.findIndex(
+      (t) => t.track.preview_url
+    );
+    setCurrentTrackIndex(firstPlayable === -1 ? 0 : firstPlayable);
     setIsPlaying(false);
     if (audioRef.current) {
       audioRef.current.pause();
@@ -69,7 +72,10 @@ export default function WebPlayerPage() {
   }, [currentTrack]);
 
   const togglePlay = () => {
-    if (!audioRef.current) return;
+    if (!currentTrack?.preview_url) return;
+    if (!audioRef.current) {
+      audioRef.current = new Audio(currentTrack.preview_url);
+    }
     if (isPlaying) {
       audioRef.current.pause();
       setIsPlaying(false);
@@ -79,21 +85,38 @@ export default function WebPlayerPage() {
     }
   };
 
+  const findPlayableIndex = (
+    start: number,
+    direction: 1 | -1
+  ): number => {
+    if (!selected?.tracks) return start;
+    const items = selected.tracks.items;
+    let idx = start;
+    do {
+      idx = (idx + direction + items.length) % items.length;
+    } while (!items[idx].track.preview_url && idx !== start);
+    return idx;
+  };
+
   const playNext = () => {
     if (!selected?.tracks) return;
-    setCurrentTrackIndex(
-      (currentTrackIndex + 1) % selected.tracks.items.length
-    );
+    setCurrentTrackIndex(findPlayableIndex(currentTrackIndex, 1));
     setIsPlaying(false);
   };
 
   const playPrev = () => {
     if (!selected?.tracks) return;
-    setCurrentTrackIndex(
-      (currentTrackIndex - 1 + selected.tracks.items.length) %
-        selected.tracks.items.length
-    );
+    setCurrentTrackIndex(findPlayableIndex(currentTrackIndex, -1));
     setIsPlaying(false);
+  };
+
+  const closePlayer = () => {
+    setSelected(null);
+    setIsPlaying(false);
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
   };
 
   if (!playlists) {
@@ -102,27 +125,37 @@ export default function WebPlayerPage() {
 
   return (
     <div className="relative text-white">
-      {selected && currentTrack && (
-        <div className="fixed top-0 left-0 right-0 h-1/2 bg-gray-900 z-10 flex flex-col items-center justify-center">
-          {currentTrack.album.images.length > 0 && (
-            <img
-              src={currentTrack.album.images[0].url}
-              alt={currentTrack.name}
-              className="w-48 h-48 object-cover mb-4 cursor-pointer"
-              onClick={() => setShowImage(true)}
-            />
-          )}
-          <div className="flex space-x-6 text-4xl">
-            <FaStepBackward className="cursor-pointer" onClick={playPrev} />
-            {isPlaying ? (
-              <FaPause className="cursor-pointer" onClick={togglePlay} />
-            ) : (
-              <FaPlay className="cursor-pointer" onClick={togglePlay} />
+      <div
+        className={`fixed top-0 left-0 right-0 h-1/2 bg-gray-900 z-10 flex flex-col items-center justify-center transform transition-transform duration-300 ${selected ? "translate-y-0" : "-translate-y-full"}`}
+      >
+        {selected && currentTrack && (
+          <>
+            <button
+              className="absolute top-2 right-2 text-2xl"
+              onClick={closePlayer}
+            >
+              ×
+            </button>
+            {currentTrack.album.images.length > 0 && (
+              <img
+                src={currentTrack.album.images[0].url}
+                alt={currentTrack.name}
+                className="w-48 h-48 object-cover mb-4 cursor-pointer"
+                onClick={() => setShowImage(true)}
+              />
             )}
-            <FaStepForward className="cursor-pointer" onClick={playNext} />
-          </div>
-        </div>
-      )}
+            <div className="flex space-x-6 text-4xl">
+              <FaStepBackward className="cursor-pointer" onClick={playPrev} />
+              {isPlaying ? (
+                <FaPause className="cursor-pointer" onClick={togglePlay} />
+              ) : (
+                <FaPlay className="cursor-pointer" onClick={togglePlay} />
+              )}
+              <FaStepForward className="cursor-pointer" onClick={playNext} />
+            </div>
+          </>
+        )}
+      </div>
       {showImage && currentTrack && (
         <div
           className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-20"
@@ -135,7 +168,7 @@ export default function WebPlayerPage() {
           />
         </div>
       )}
-      <section className="pt-[50vh]">
+      <section className={selected ? "pt-[50vh]" : ""}>
         <h2 className="text-2xl font-bold mb-4">My Playlists</h2>
         <ul className="list-none space-y-2">
           {playlists.items.map((pl) => (
