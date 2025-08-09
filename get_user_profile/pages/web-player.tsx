@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useAuth } from "../src/AuthContext";
 import { Loader } from "../components/loader";
 import { fetchPlaylists, fetchPlaylist } from "./api/playlist";
@@ -20,7 +20,6 @@ export default function WebPlayerPage() {
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showImage, setShowImage] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -46,41 +45,35 @@ export default function WebPlayerPage() {
     const detail = await fetchPlaylist(token, pl.id, 50, 0);
     setSelected(detail);
     const firstPlayable = detail.tracks.items.findIndex(
-      (t) => t.track.preview_url
+      (t) => t.track.is_playable !== false
     );
     setCurrentTrackIndex(firstPlayable === -1 ? 0 : firstPlayable);
     setIsPlaying(false);
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current = null;
-    }
   };
 
   const currentTrack =
     selected?.tracks?.items[currentTrackIndex]?.track;
 
-  useEffect(() => {
-    if (!currentTrack?.preview_url) return;
-    if (!audioRef.current) {
-      audioRef.current = new Audio(currentTrack.preview_url);
-    } else {
-      audioRef.current.src = currentTrack.preview_url;
-    }
+  const togglePlay = async () => {
+    if (!token || !selected) return;
     if (isPlaying) {
-      audioRef.current.play();
-    }
-  }, [currentTrack]);
-
-  const togglePlay = () => {
-    if (!currentTrack?.preview_url) return;
-    if (!audioRef.current) {
-      audioRef.current = new Audio(currentTrack.preview_url);
-    }
-    if (isPlaying) {
-      audioRef.current.pause();
+      await fetch("https://api.spotify.com/v1/me/player/pause", {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setIsPlaying(false);
     } else {
-      audioRef.current.play();
+      await fetch("https://api.spotify.com/v1/me/player/play", {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          context_uri: selected.uri,
+          offset: { position: currentTrackIndex },
+        }),
+      });
       setIsPlaying(true);
     }
   };
@@ -94,28 +87,38 @@ export default function WebPlayerPage() {
     let idx = start;
     do {
       idx = (idx + direction + items.length) % items.length;
-    } while (!items[idx].track.preview_url && idx !== start);
+    } while (items[idx].track.is_playable === false && idx !== start);
     return idx;
   };
 
-  const playNext = () => {
-    if (!selected?.tracks) return;
+  const playNext = async () => {
+    if (!token || !selected?.tracks) return;
+    await fetch("https://api.spotify.com/v1/me/player/next", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    });
     setCurrentTrackIndex(findPlayableIndex(currentTrackIndex, 1));
-    setIsPlaying(false);
+    setIsPlaying(true);
   };
 
-  const playPrev = () => {
-    if (!selected?.tracks) return;
+  const playPrev = async () => {
+    if (!token || !selected?.tracks) return;
+    await fetch("https://api.spotify.com/v1/me/player/previous", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    });
     setCurrentTrackIndex(findPlayableIndex(currentTrackIndex, -1));
-    setIsPlaying(false);
+    setIsPlaying(true);
   };
 
-  const closePlayer = () => {
+  const closePlayer = async () => {
     setSelected(null);
     setIsPlaying(false);
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current = null;
+    if (token) {
+      await fetch("https://api.spotify.com/v1/me/player/pause", {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}` },
+      });
     }
   };
 
