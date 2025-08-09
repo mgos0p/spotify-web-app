@@ -29,7 +29,7 @@ export default function WebPlayerPage() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [deviceId, setDeviceId] = useState<string | null>(null);
   const [deviceError, setDeviceError] = useState<string | null>(null);
-  const controlsDisabled = !deviceId;
+  const [controlsDisabled, setControlsDisabled] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -63,6 +63,7 @@ export default function WebPlayerPage() {
         );
         setDeviceId(null);
         setIsPlaying(false);
+        setControlsDisabled(true);
         attempts++;
         if (attempts >= 3) {
           clearInterval(interval);
@@ -72,6 +73,7 @@ export default function WebPlayerPage() {
       setDeviceId(data.device.id);
       setIsPlaying(data.is_playing);
       setDeviceError(null);
+      setControlsDisabled(false);
       attempts = 0;
     };
 
