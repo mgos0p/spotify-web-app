@@ -29,7 +29,7 @@ export default function WebPlayerPage() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [deviceId, setDeviceId] = useState<string | null>(null);
   const [deviceError, setDeviceError] = useState<string | null>(null);
-  const [controlsDisabled, setControlsDisabled] = useState(true);
+  const [controlsDisabled, setControlsDisabled] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -63,7 +63,7 @@ export default function WebPlayerPage() {
         );
         setDeviceId(null);
         setIsPlaying(false);
-        setControlsDisabled(true);
+        // setControlsDisabled(true);
         attempts++;
         if (attempts >= 3) {
           clearInterval(interval);
@@ -73,7 +73,7 @@ export default function WebPlayerPage() {
       setDeviceId(data.device.id);
       setIsPlaying(data.is_playing);
       setDeviceError(null);
-      setControlsDisabled(false);
+      // setControlsDisabled(false);
       attempts = 0;
     };
 
@@ -87,9 +87,7 @@ export default function WebPlayerPage() {
     const detail = await fetchPlaylist(token, pl.id, 50, 0);
     setSelected(detail);
     const firstPlayable =
-      detail.tracks?.items.findIndex(
-        (t) => t.track.is_playable !== false
-      ) ?? 0;
+      detail.tracks?.items.findIndex((t) => t.track.is_playable !== false) ?? 0;
     setCurrentTrackIndex(firstPlayable === -1 ? 0 : firstPlayable);
     setIsPlaying(false);
   };
