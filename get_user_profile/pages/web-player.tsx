@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "../src/AuthContext";
 import { Loader } from "../components/loader";
 import { fetchPlaylists, fetchPlaylist } from "./api/playlist";
+import { fetchPlayerState } from "./api/player";
 import { redirectToAuthCodeFlow } from "../src/authCodeWithPkce";
 import {
   FaPlay,
@@ -46,27 +47,23 @@ export default function WebPlayerPage() {
   useEffect(() => {
     if (!token) return;
 
-    const fetchDevices = async () => {
-      const res = await fetch("https://api.spotify.com/v1/me/player/devices", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      const devices = Array.isArray(data?.devices) ? data.devices : [];
-      if (devices.length === 0) {
+    const updatePlayback = async () => {
+      const data = await fetchPlayerState(token);
+      if (!data || !data.device) {
         setDeviceError(
           "No active Spotify device found. Please open Spotify on a device."
         );
         setDeviceId(null);
+        setIsPlaying(false);
         return;
       }
-      const active = devices.find((d: any) => d.is_active);
-      const id = active ? active.id : devices[0].id;
-      setDeviceId(id);
+      setDeviceId(data.device.id);
+      setIsPlaying(data.is_playing);
       setDeviceError(null);
     };
 
-    fetchDevices();
-    const interval = setInterval(fetchDevices, 5000);
+    updatePlayback();
+    const interval = setInterval(updatePlayback, 5000);
     return () => clearInterval(interval);
   }, [token]);
 
