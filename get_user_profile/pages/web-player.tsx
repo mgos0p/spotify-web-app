@@ -20,6 +20,7 @@ export default function WebPlayerPage() {
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showImage, setShowImage] = useState(false);
+  const [deviceId, setDeviceId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -40,6 +41,20 @@ export default function WebPlayerPage() {
     fetchData();
   }, [token]);
 
+  useEffect(() => {
+    const fetchDevices = async () => {
+      if (!token) return;
+      const res = await fetch("https://api.spotify.com/v1/me/player/devices", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      const active = data.devices.find((d: any) => d.is_active);
+      const id = active ? active.id : data.devices[0]?.id;
+      if (id) setDeviceId(id);
+    };
+    fetchDevices();
+  }, [token]);
+
   const openPlaylist = async (pl: SpotifyPlaylistResponse) => {
     if (!token) return;
     const detail = await fetchPlaylist(token, pl.id, 50, 0);
@@ -57,23 +72,33 @@ export default function WebPlayerPage() {
   const togglePlay = async () => {
     if (!token || !selected) return;
     if (isPlaying) {
-      await fetch("https://api.spotify.com/v1/me/player/pause", {
-        method: "PUT",
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await fetch(
+        `https://api.spotify.com/v1/me/player/pause${
+          deviceId ? `?device_id=${deviceId}` : ""
+        }`,
+        {
+          method: "PUT",
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       setIsPlaying(false);
     } else {
-      await fetch("https://api.spotify.com/v1/me/player/play", {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          context_uri: selected.uri,
-          offset: { position: currentTrackIndex },
-        }),
-      });
+      await fetch(
+        `https://api.spotify.com/v1/me/player/play${
+          deviceId ? `?device_id=${deviceId}` : ""
+        }`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            context_uri: selected.uri,
+            offset: { position: currentTrackIndex },
+          }),
+        }
+      );
       setIsPlaying(true);
     }
   };
@@ -93,20 +118,30 @@ export default function WebPlayerPage() {
 
   const playNext = async () => {
     if (!token || !selected?.tracks) return;
-    await fetch("https://api.spotify.com/v1/me/player/next", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    await fetch(
+      `https://api.spotify.com/v1/me/player/next${
+        deviceId ? `?device_id=${deviceId}` : ""
+      }`,
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
     setCurrentTrackIndex(findPlayableIndex(currentTrackIndex, 1));
     setIsPlaying(true);
   };
 
   const playPrev = async () => {
     if (!token || !selected?.tracks) return;
-    await fetch("https://api.spotify.com/v1/me/player/previous", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    await fetch(
+      `https://api.spotify.com/v1/me/player/previous${
+        deviceId ? `?device_id=${deviceId}` : ""
+      }`,
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
     setCurrentTrackIndex(findPlayableIndex(currentTrackIndex, -1));
     setIsPlaying(true);
   };
@@ -115,10 +150,15 @@ export default function WebPlayerPage() {
     setSelected(null);
     setIsPlaying(false);
     if (token) {
-      await fetch("https://api.spotify.com/v1/me/player/pause", {
-        method: "PUT",
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await fetch(
+        `https://api.spotify.com/v1/me/player/pause${
+          deviceId ? `?device_id=${deviceId}` : ""
+        }`,
+        {
+          method: "PUT",
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
     }
   };
 
