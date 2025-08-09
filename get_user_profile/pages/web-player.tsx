@@ -21,6 +21,8 @@ export default function WebPlayerPage() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [showImage, setShowImage] = useState(false);
   const [deviceId, setDeviceId] = useState<string | null>(null);
+  const [deviceError, setDeviceError] = useState<string | null>(null);
+  const controlsDisabled = !deviceId;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -42,17 +44,29 @@ export default function WebPlayerPage() {
   }, [token]);
 
   useEffect(() => {
+    if (!token) return;
+
     const fetchDevices = async () => {
-      if (!token) return;
       const res = await fetch("https://api.spotify.com/v1/me/player/devices", {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
+      if (!data.devices || data.devices.length === 0) {
+        setDeviceError(
+          "No active Spotify device found. Please open Spotify on a device."
+        );
+        setDeviceId(null);
+        return;
+      }
       const active = data.devices.find((d: any) => d.is_active);
-      const id = active ? active.id : data.devices[0]?.id;
-      if (id) setDeviceId(id);
+      const id = active ? active.id : data.devices[0].id;
+      setDeviceId(id);
+      setDeviceError(null);
     };
+
     fetchDevices();
+    const interval = setInterval(fetchDevices, 5000);
+    return () => clearInterval(interval);
   }, [token]);
 
   const openPlaylist = async (pl: SpotifyPlaylistResponse) => {
@@ -70,7 +84,7 @@ export default function WebPlayerPage() {
     selected?.tracks?.items[currentTrackIndex]?.track;
 
   const togglePlay = async () => {
-    if (!token || !selected) return;
+    if (!token || !selected || !deviceId) return;
     if (isPlaying) {
       await fetch(
         `https://api.spotify.com/v1/me/player/pause${
@@ -117,7 +131,7 @@ export default function WebPlayerPage() {
   };
 
   const playNext = async () => {
-    if (!token || !selected?.tracks) return;
+    if (!token || !selected?.tracks || !deviceId) return;
     await fetch(
       `https://api.spotify.com/v1/me/player/next${
         deviceId ? `?device_id=${deviceId}` : ""
@@ -132,7 +146,7 @@ export default function WebPlayerPage() {
   };
 
   const playPrev = async () => {
-    if (!token || !selected?.tracks) return;
+    if (!token || !selected?.tracks || !deviceId) return;
     await fetch(
       `https://api.spotify.com/v1/me/player/previous${
         deviceId ? `?device_id=${deviceId}` : ""
@@ -188,13 +202,41 @@ export default function WebPlayerPage() {
               />
             )}
             <div className="flex space-x-6 text-4xl">
-              <FaStepBackward className="cursor-pointer" onClick={playPrev} />
+              <FaStepBackward
+                className={
+                  controlsDisabled
+                    ? "opacity-50 cursor-not-allowed"
+                    : "cursor-pointer"
+                }
+                onClick={controlsDisabled ? undefined : playPrev}
+              />
               {isPlaying ? (
-                <FaPause className="cursor-pointer" onClick={togglePlay} />
+                <FaPause
+                  className={
+                    controlsDisabled
+                      ? "opacity-50 cursor-not-allowed"
+                      : "cursor-pointer"
+                  }
+                  onClick={controlsDisabled ? undefined : togglePlay}
+                />
               ) : (
-                <FaPlay className="cursor-pointer" onClick={togglePlay} />
+                <FaPlay
+                  className={
+                    controlsDisabled
+                      ? "opacity-50 cursor-not-allowed"
+                      : "cursor-pointer"
+                  }
+                  onClick={controlsDisabled ? undefined : togglePlay}
+                />
               )}
-              <FaStepForward className="cursor-pointer" onClick={playNext} />
+              <FaStepForward
+                className={
+                  controlsDisabled
+                    ? "opacity-50 cursor-not-allowed"
+                    : "cursor-pointer"
+                }
+                onClick={controlsDisabled ? undefined : playNext}
+              />
             </div>
           </>
         )}
@@ -210,6 +252,9 @@ export default function WebPlayerPage() {
             className="max-w-full max-h-full"
           />
         </div>
+      )}
+      {deviceError && (
+        <p className="text-center text-red-500 mt-4">{deviceError}</p>
       )}
       <section className={selected ? "pt-[50vh]" : ""}>
         <h2 className="text-2xl font-bold mb-4">My Playlists</h2>
