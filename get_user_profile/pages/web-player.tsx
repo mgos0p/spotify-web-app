@@ -32,7 +32,7 @@ export default function WebPlayerPage() {
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [deviceId, setDeviceId] = useState<string | null>(null);
-  const controlsDisabled = !deviceId;
+  const [controlsDisabled] = useState(false);
   const [position, setPosition] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(1);
