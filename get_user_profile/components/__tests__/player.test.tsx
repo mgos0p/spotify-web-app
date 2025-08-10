@@ -290,6 +290,46 @@ describe("Player", () => {
     expect(onVolumeChange).toHaveBeenCalledTimes(1);
   });
 
+  it("displays formatted time and volume", async () => {
+    await act(async () => {
+      root.render(
+        <Player
+          visible={true}
+          track={track}
+          isPlaying={false}
+          controlsDisabled={false}
+          onTogglePlay={() => {}}
+          onPrev={() => {}}
+          onNext={() => {}}
+          onClose={() => {}}
+          position={65000}
+          duration={3723000}
+          volume={0.55}
+          shuffle={false}
+          repeat="off"
+          onSeek={() => {}}
+          onVolumeChange={() => {}}
+          onToggleShuffle={() => {}}
+          onToggleRepeat={() => {}}
+        />
+      );
+    });
+
+    const elapsed = container.querySelector(
+      '[data-testid="elapsed-time"]'
+    ) as HTMLElement;
+    const total = container.querySelector(
+      '[data-testid="total-time"]'
+    ) as HTMLElement;
+    const volumeValue = container.querySelector(
+      '[data-testid="volume-value"]'
+    ) as HTMLElement;
+
+    expect(elapsed.textContent).toBe("01:05");
+    expect(total.textContent).toBe("01:02:03");
+    expect(volumeValue.textContent).toBe("55");
+  });
+
   it("returns null when track is missing", async () => {
     await act(async () => {
       root.render(

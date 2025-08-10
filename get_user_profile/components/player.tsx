@@ -9,6 +9,18 @@ import {
   FaVolumeUp,
 } from "react-icons/fa";
 
+// Format milliseconds to "hh:mm:ss" or "mm:ss" when hours are zero
+const formatTime = (ms: number): string => {
+  const totalSeconds = Math.floor(ms / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  const two = (n: number) => n.toString().padStart(2, "0");
+  return hours > 0
+    ? `${two(hours)}:${two(minutes)}:${two(seconds)}`
+    : `${two(minutes)}:${two(seconds)}`;
+};
+
 /**
  * Modal-like player that slides down from the top of the page to control the
  * current track. When `visible` is false nothing is rendered. Each control is
@@ -155,26 +167,34 @@ export const Player: React.FC<PlayerProps> = ({
          * Slider for seeking within the track. Clamp values to avoid NaN or
          * values outside the duration range, especially when duration is 0.
          */}
-        <input
-          type="range"
-          min={0}
-          max={duration > 0 ? duration : 0}
-          value={Math.min(Math.max(position, 0), duration > 0 ? duration : 0)}
-          onChange={
-            controlsDisabled
-              ? undefined
-              : (e) =>
-                  onSeek(
-                    Math.min(
-                      Math.max(Number(e.target.value), 0),
-                      duration > 0 ? duration : 0
+        <div className="flex items-center w-3/4 mt-4">
+          <span className="mr-2 text-sm" data-testid="elapsed-time">
+            {formatTime(position)}
+          </span>
+          <input
+            type="range"
+            min={0}
+            max={duration > 0 ? duration : 0}
+            value={Math.min(Math.max(position, 0), duration > 0 ? duration : 0)}
+            onChange={
+              controlsDisabled
+                ? undefined
+                : (e) =>
+                    onSeek(
+                      Math.min(
+                        Math.max(Number(e.target.value), 0),
+                        duration > 0 ? duration : 0
+                      )
                     )
-                  )
-          }
-          className="w-3/4 mt-4"
-          aria-label="Seek position"
-          disabled={controlsDisabled}
-        />
+            }
+            className="flex-1"
+            aria-label="Seek position"
+            disabled={controlsDisabled}
+          />
+          <span className="ml-2 text-sm" data-testid="total-time">
+            {formatTime(duration)}
+          </span>
+        </div>
         {/**
          * Volume slider clamped between 0 and 1 for accessibility and to
          * prevent out-of-range values. A speaker icon provides a clearer
@@ -200,6 +220,9 @@ export const Player: React.FC<PlayerProps> = ({
             aria-label="Volume"
             disabled={controlsDisabled}
           />
+          <span className="ml-2" data-testid="volume-value">
+            {Math.round(Math.min(Math.max(volume, 0), 1) * 100)}
+          </span>
         </div>
       </div>
       {showImage && track && (
