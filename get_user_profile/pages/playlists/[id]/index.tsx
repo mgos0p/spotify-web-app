@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import { fetchPlaylist, fetchPlaylistItems } from "../../api/playlist";
-import { fetchAudioFeatures } from "../../api/track";
+import { fetchPlaylist, fetchPlaylistItems } from "../../../lib/spotify/playlist";
+import { fetchAudioFeatures } from "../../../lib/spotify/track";
 import { PlaylistDetail } from "../../../components/playlistDetail";
 import { Loader } from "../../../components/loader";
 import { redirectToAuthCodeFlow } from "../../../src/authCodeWithPkce";

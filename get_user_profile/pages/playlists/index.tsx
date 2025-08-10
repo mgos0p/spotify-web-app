@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Playlists } from "../../components/playlists";
 import { Loader } from "../../components/loader";
-import { fetchPlaylists } from "../../pages/api/playlist";
+import { fetchPlaylists } from "../../lib/spotify/playlist";
 import { redirectToAuthCodeFlow } from "../../src/authCodeWithPkce";
 
 import { useAuth } from "../../src/AuthContext";

@@ -3,8 +3,8 @@ import { useRouter } from "next/router";
 import {
   fetchPlaylist,
   fetchPlaylistItems,
-} from "../../api/playlist";
-import { fetchAudioFeaturesBatch, fetchAudioAnalysis } from "../../api/track";
+} from "../../../lib/spotify/playlist";
+import { fetchAudioFeaturesBatch, fetchAudioAnalysis } from "../../../lib/spotify/track";
 import { redirectToAuthCodeFlow } from "../../../src/authCodeWithPkce";
 import {
   Chart as ChartJS,
