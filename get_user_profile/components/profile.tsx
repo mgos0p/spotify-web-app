@@ -1,15 +1,5 @@
 import React from "react";
-
-interface UserProfile {
-  display_name: string;
-  images: Array<{ url: string }>;
-  id: string;
-  email: string;
-  uri: string;
-  external_urls?: { spotify: string };
-  followers?: { href: string; total: number };
-  href: string;
-}
+import type { UserProfile } from "../types";
 
 interface ProfileProps {
   profile: UserProfile;

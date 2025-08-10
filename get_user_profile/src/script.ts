@@ -5,6 +5,7 @@ import {
   getAccessToken,
   refreshAccessToken,
 } from "./authCodeWithPkce";
+import type { UserProfile } from "../types";
 
 const clientId = import.meta.env.VITE_SPOTIFY_CLIENT_ID;
 const params = new URLSearchParams(window.location.search);
