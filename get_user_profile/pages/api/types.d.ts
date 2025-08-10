@@ -100,6 +100,12 @@ interface SpotifyPlaylistTrackObject {
   track: SpotifyTrackObject;
 }
 
+interface SpotifyDevice {
+  id: string;
+  name: string;
+  is_active: boolean;
+}
+
 interface SpotifyTrackObject {
   album: SpotifyAlbumObject;
   artists: SpotifyArtistObject[];

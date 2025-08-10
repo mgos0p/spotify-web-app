@@ -8,6 +8,7 @@ import { Loader } from "../components/loader";
 import { fetchPlaylists, fetchPlaylist } from "./api/playlist";
 import {
   fetchPlayerState,
+  fetchAvailableDevices,
   startPlayback,
   pausePlayback,
   nextTrack,
@@ -37,6 +38,7 @@ export default function WebPlayerPage() {
     useState<SpotifyTrackObject | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [deviceId, setDeviceId] = useState<string | null>(null);
+  const [devices, setDevices] = useState<SpotifyDevice[]>([]);
   const [controlsDisabled] = useState(false);
   const [position, setPosition] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -73,6 +75,15 @@ export default function WebPlayerPage() {
     };
     fetchData();
   }, [token, deviceId]);
+
+  useEffect(() => {
+    if (!token) return;
+    const loadDevices = async () => {
+      const list = await fetchAvailableDevices(token);
+      setDevices(list);
+    };
+    loadDevices();
+  }, [token]);
 
   useEffect(() => {
     if (!token || playerRef.current) return;
@@ -195,6 +206,13 @@ export default function WebPlayerPage() {
     }
   };
 
+  const handleDeviceChange = async (id: string) => {
+    if (!token) return;
+    setDeviceId(id);
+    deviceActiveRef.current = false;
+    await transferPlayback(token, id, isPlaying);
+  };
+
   const findPlayableIndex = (start: number, direction: 1 | -1): number => {
     if (!selected?.tracks) return start;
     const items = selected.tracks.items;
@@ -304,6 +322,9 @@ export default function WebPlayerPage() {
         onVolumeChange={handleVolumeChange}
         onToggleShuffle={toggleShuffle}
         onToggleRepeat={cycleRepeat}
+        devices={devices}
+        deviceId={deviceId}
+        onDeviceSelect={handleDeviceChange}
       />
     </>
   );
