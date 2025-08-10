@@ -3,5 +3,8 @@ export const fetchProfile = async (code: string): Promise<UserProfile> => {
     method: "GET",
     headers: { Authorization: `Bearer ${code}` },
   });
+  if (!result.ok) {
+    throw new Error("Failed to fetch profile");
+  }
   return await result.json();
 };

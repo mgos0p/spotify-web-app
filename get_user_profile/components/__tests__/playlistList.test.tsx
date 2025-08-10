@@ -32,6 +32,20 @@ describe("PlaylistList", () => {
     expect(container.textContent).toContain("Mix");
   });
 
+  it("invokes onSelect when a playlist is clicked", async () => {
+    const playlist = { id: "1", name: "Mix", images: [] } as any;
+    const playlists = { items: [playlist] } as any;
+    const onSelect = jest.fn();
+    await act(async () => {
+      root.render(<PlaylistList playlists={playlists} onSelect={onSelect} />);
+    });
+    const item = container.querySelector("li")!;
+    await act(async () => {
+      item.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    expect(onSelect).toHaveBeenCalledWith(playlist);
+  });
+
   it("handles missing playlists", async () => {
     const onSelect = jest.fn();
     await act(async () => {

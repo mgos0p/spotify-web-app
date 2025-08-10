@@ -116,6 +116,43 @@ describe("AuthProvider", () => {
     expect(window.localStorage.getItem("access_token")).toBeNull();
   });
 
+  it("refreshes the access token when it is about to expire", async () => {
+    jest.useFakeTimers();
+    process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID = "client";
+    window.localStorage.setItem("access_token", "old-token");
+    window.localStorage.setItem("refresh_token", "refresh-token");
+    window.localStorage.setItem(
+      "expires_at",
+      (Date.now() + 30_000).toString()
+    );
+
+    const refreshMock = jest
+      .spyOn(require("../authCodeWithPkce"), "refreshAccessToken")
+      .mockResolvedValue({
+        access_token: "new-token",
+        expires_in: 3600,
+      });
+
+    await act(async () => {
+      root.render(
+        <AuthProvider>
+          <TestComponent />
+        </AuthProvider>
+      );
+    });
+
+    expect(context.token).toBe("old-token");
+
+    await act(async () => {
+      jest.runOnlyPendingTimers();
+    });
+
+    expect(refreshMock).toHaveBeenCalledWith("client", "refresh-token");
+    expect(context.token).toBe("new-token");
+    refreshMock.mockRestore();
+    jest.useRealTimers();
+  });
+
   it("throws error when useAuth is used outside provider", () => {
     const Consumer = () => {
       useAuth();
