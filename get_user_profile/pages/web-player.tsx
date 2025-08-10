@@ -113,7 +113,12 @@ export default function WebPlayerPage() {
     if (!token || !deviceId) return;
     const updatePlayback = async () => {
       const data = await fetchPlayerState(token);
-      if (!data || data.device?.id !== deviceId) return;
+      if (!data) return;
+      if (data.device?.id !== deviceId) {
+        deviceActiveRef.current = false;
+        await transferPlayback(token, deviceId, data.is_playing ?? false);
+        return;
+      }
       deviceActiveRef.current = true;
       setVolume((data.device.volume_percent ?? 100) / 100);
       setShuffleState(data.shuffle_state ?? false);

@@ -60,9 +60,19 @@ export const resumePlayback = async (
   );
 };
 
+/**
+ * Transfer playback to a specific device.
+ *
+ * @param token OAuth access token used for authorization.
+ * @param deviceId The target device's Spotify ID.
+ * @param play Whether playback should start on the new device. Defaults to `false`,
+ *             leaving playback paused after transfer. Set to `true` to resume
+ *             playback immediately on the new device.
+ */
 export const transferPlayback = async (
   token: string,
-  deviceId: string
+  deviceId: string,
+  play = false
 ): Promise<void> => {
   await fetch("https://api.spotify.com/v1/me/player", {
     method: "PUT",
@@ -70,7 +80,7 @@ export const transferPlayback = async (
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ device_ids: [deviceId], play: false }),
+    body: JSON.stringify({ device_ids: [deviceId], play }),
   });
 };
 
