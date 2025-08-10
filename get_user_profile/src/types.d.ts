@@ -22,14 +22,6 @@ interface Image {
   width: number;
 }
 
-interface ImportMetaEnv {
-  readonly VITE_SPOTIFY_CLIENT_ID: string;
-}
-
-interface ImportMeta {
-  readonly env: ImportMetaEnv;
-}
-
 interface Window {
   onSpotifyWebPlaybackSDKReady?: () => void;
   Spotify: any;
