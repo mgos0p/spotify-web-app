@@ -249,11 +249,11 @@ describe("Player", () => {
     const seek = sliders[0] as HTMLInputElement;
     const volumeSlider = sliders[1] as HTMLInputElement;
 
-    // Initial values are clamped
+    // 初期値はクランプされる
     expect(seek.value).toBe("1000");
     expect(volumeSlider.value).toBe("1");
 
-    // Simulate user moving sliders beyond bounds
+    // ユーザーがスライダーを範囲外に動かした場合をシミュレート
     seek.value = "1500";
     volumeSlider.value = "2";
     await act(async () => {
@@ -306,7 +306,7 @@ describe("Player", () => {
       disabledVolume.dispatchEvent(new Event("input", { bubbles: true }));
     });
 
-    // Handlers should not fire again when controls are disabled
+    // コントロールが無効なときはハンドラーが再度呼ばれないはず
     expect(onSeek).toHaveBeenCalledTimes(1);
     expect(onVolumeChange).toHaveBeenCalledTimes(1);
   });

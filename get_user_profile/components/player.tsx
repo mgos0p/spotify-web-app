@@ -9,7 +9,7 @@ import {
   FaVolumeUp,
 } from "react-icons/fa";
 
-// Format milliseconds to "hh:mm:ss" or "mm:ss" when hours are zero
+// ミリ秒を「hh:mm:ss」または「mm:ss」に整形（時間が0の場合はmm:ss）
 const formatTime = (ms: number): string => {
   const totalSeconds = Math.floor(ms / 1000);
   const hours = Math.floor(totalSeconds / 3600);
@@ -22,53 +22,53 @@ const formatTime = (ms: number): string => {
 };
 
 /**
- * Modal-like player that slides down from the top of the page to control the
- * current track. When `visible` is false nothing is rendered. Each control is
- * disabled when `controlsDisabled` is true, preventing interaction.
+ * ページ上部からスライドダウンして再生中のトラックを操作するモーダル風プレイヤー。
+ * `visible` が false のときは何も描画されない。`controlsDisabled` が true の場合、
+ * 各操作は無効化される。
  */
 interface PlayerProps {
-  /** Whether the modal should be shown */
+  /** モーダルを表示するかどうか */
   visible: boolean;
-  /** Track information for the currently selected song */
+  /** 選択中の曲のトラック情報 */
   track: SpotifyTrackObject | null;
-  /** Indicates if Spotify is currently playing */
+  /** Spotify が再生中かどうか */
   isPlaying: boolean;
   /**
-   * Disables all playback controls. When true the icons render with reduced
-   * opacity and their handlers become no-ops.
+   * すべての再生操作を無効化する。true のときアイコンは半透明になり、
+   * ハンドラは何もしない。
    */
   controlsDisabled: boolean;
-  /** Toggle play/pause; should be a no-op if controlsDisabled */
+  /** 再生/一時停止を切り替える。controlsDisabled の場合は何もしない */
   onTogglePlay: () => void;
-  /** Skip to the previous track; no-op if controlsDisabled */
+  /** 前のトラックへスキップ。controlsDisabled の場合は何もしない */
   onPrev: () => void;
-  /** Skip to the next track; no-op if controlsDisabled */
+  /** 次のトラックへスキップ。controlsDisabled の場合は何もしない */
   onNext: () => void;
-  /** Called when the × button is clicked to close the modal */
+  /** × ボタンがクリックされたときにモーダルを閉じるために呼び出される */
   onClose: () => void;
-  /** Current playback position in ms */
+  /** 現在の再生位置（ms） */
   position: number;
-  /** Duration of current track in ms */
+  /** 現在のトラックの長さ（ms） */
   duration: number;
-  /** Volume 0-1 */
+  /** 音量 0〜1 */
   volume: number;
-  /** Whether shuffle mode is enabled */
+  /** シャッフルモードが有効かどうか */
   shuffle: boolean;
-  /** Current repeat mode */
+  /** 現在のリピートモード */
   repeat: "off" | "track" | "context";
-  /** Seek handler */
+  /** シーク処理 */
   onSeek: (ms: number) => void;
-  /** Volume change handler */
+  /** 音量変更処理 */
   onVolumeChange: (v: number) => void;
-  /** Toggle shuffle handler */
+  /** シャッフル切り替え処理 */
   onToggleShuffle: () => void;
-  /** Toggle repeat handler */
+  /** リピート切り替え処理 */
   onToggleRepeat: () => void;
-  /** List of available devices */
+  /** 利用可能なデバイスの一覧 */
   devices: SpotifyDevice[];
-  /** Currently selected device id */
+  /** 現在選択中のデバイスID */
   deviceId: string | null;
-  /** Device selection handler */
+  /** デバイス選択処理 */
   onDeviceSelect: (id: string) => void;
 }
 
@@ -103,7 +103,7 @@ export const Player: React.FC<PlayerProps> = ({
           visible ? "translate-y-0" : "-translate-y-full"
         }`}
       >
-        {/* Clicking the × delegates to onClose so the parent can hide the modal */}
+        {/* × をクリックすると onClose に委譲され、親がモーダルを閉じる */}
         <button className="absolute top-2 right-2 text-2xl" onClick={onClose}>
           ×
         </button>
@@ -173,8 +173,8 @@ export const Player: React.FC<PlayerProps> = ({
           />
         </div>
         {/**
-         * Slider for seeking within the track. Clamp values to avoid NaN or
-         * values outside the duration range, especially when duration is 0.
+         * トラック内をシークするためのスライダー。duration が 0 の場合などに
+         * NaN や範囲外の値にならないよう制限する。
          */}
         <div className="flex items-center w-3/4 mt-4">
           <span className="mr-2 text-sm" data-testid="elapsed-time">

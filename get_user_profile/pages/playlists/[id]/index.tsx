@@ -76,7 +76,7 @@ const PlaylistDetailPage = () => {
           playlistDetail.tracks!.next!
         );
 
-        // Deduplicate tracks by ID before updating state
+        // 状態を更新する前にIDでトラックの重複を排除
         const uniqueItems = tracks.items.filter(
           (item) =>
             item.track &&

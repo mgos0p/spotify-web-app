@@ -9,7 +9,7 @@ interface ErrorProps {
 
 function Error({ statusCode, hasGetInitialPropsRun, err }: ErrorProps) {
   if (!hasGetInitialPropsRun && err) {
-    // getInitialProps was not called on the client, this is a client-side error
+    // クライアントで getInitialProps が呼ばれていないため、これはクライアント側のエラー
     console.error("Client-side error:", err);
   }
 
