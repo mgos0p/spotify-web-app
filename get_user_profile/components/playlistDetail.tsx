@@ -60,9 +60,13 @@ export const PlaylistDetail: React.FC<PlaylistDetailProps> = ({
           className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 3xl:grid-cols-7 4xl:grid-cols-8"
         >
           {playlistDetail.tracks?.items?.map((item, index) => {
-            const features = trackFeatures[item.track.id];
+            const trackId = item.track?.id;
+            const features = trackId ? trackFeatures[trackId] : undefined;
             return (
-              <div key={index} className="bg-gray-700 p-4 rounded-lg shadow">
+              <div
+                key={trackId ?? `temp-${index}`}
+                className="bg-gray-700 p-4 rounded-lg shadow"
+              >
                 {item.track.album.images.length > 0 && (
                   <img
                     src={item.track.album.images[0].url}
