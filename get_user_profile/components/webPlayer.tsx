@@ -8,7 +8,6 @@ interface WebPlayerProps {
   currentTrack: SpotifyTrackObject | null;
   isPlaying: boolean;
   controlsDisabled: boolean;
-  deviceError: string | null;
   onTogglePlay: () => void;
   onPrev: () => void;
   onNext: () => void;
@@ -38,7 +37,6 @@ export const WebPlayer: React.FC<WebPlayerProps> = ({
   currentTrack,
   isPlaying,
   controlsDisabled,
-  deviceError,
   onTogglePlay,
   onPrev,
   onNext,
@@ -74,9 +72,6 @@ export const WebPlayer: React.FC<WebPlayerProps> = ({
       onToggleShuffle={onToggleShuffle}
       onToggleRepeat={onToggleRepeat}
     />
-    {deviceError && (
-      <p className="text-center text-red-500 mt-4">{deviceError}</p>
-    )}
     <div className={selected ? "pt-[50vh]" : ""}>
       <PlaylistList playlists={playlists} onSelect={onSelectPlaylist} />
     </div>

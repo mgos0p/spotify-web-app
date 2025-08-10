@@ -32,9 +32,7 @@ export default function WebPlayerPage() {
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [deviceId, setDeviceId] = useState<string | null>(null);
-  const [deviceError, setDeviceError] = useState<string | null>(null);
   const controlsDisabled = !deviceId;
-  const [sdkPlayer, setSdkPlayer] = useState<any | null>(null);
   const [position, setPosition] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(1);
@@ -67,7 +65,10 @@ export default function WebPlayerPage() {
     const updatePlayback = async () => {
       const data = await fetchPlayerState(token);
       if (!data) return;
-      if (data.device) setDeviceId(data.device.id);
+      if (data.device) {
+        setDeviceId(data.device.id);
+        setVolume((data.device.volume_percent ?? 100) / 100);
+      }
       setIsPlaying(data.is_playing);
       setPosition(data.progress_ms ?? 0);
       setDuration(data.item?.duration_ms ?? 0);
@@ -75,48 +76,9 @@ export default function WebPlayerPage() {
       setRepeatState(data.repeat_state ?? "off");
     };
     updatePlayback();
-    const interval = setInterval(updatePlayback, 5000);
+    const interval = setInterval(updatePlayback, 1000);
     return () => clearInterval(interval);
   }, [token]);
-
-  useEffect(() => {
-    if (!token || sdkPlayer) return;
-    const script = document.createElement("script");
-    script.src = "https://sdk.scdn.co/spotify-player.js";
-    script.async = true;
-    document.body.appendChild(script);
-    let player: any;
-    (window as any).onSpotifyWebPlaybackSDKReady = () => {
-      player = new (window as any).Spotify.Player({
-        name: "Web Playback",
-        getOAuthToken: (cb: any) => cb(token),
-      });
-      player.addListener("ready", ({ device_id }: any) => {
-        setDeviceId(device_id);
-        setDeviceError(null);
-        player.getVolume().then((v: number) => setVolume(v));
-      });
-      player.addListener("player_state_changed", (state: any) => {
-        if (!state) return;
-        setIsPlaying(!state.paused);
-        setPosition(state.position);
-        setDuration(state.duration);
-        setShuffleState(state.shuffle);
-        const map: Record<number, "off" | "track" | "context"> = {
-          0: "off",
-          1: "track",
-          2: "context",
-        };
-        setRepeatState(map[state.repeat_mode] || "off");
-      });
-      player.connect();
-      setSdkPlayer(player);
-    };
-    return () => {
-      if (player) player.disconnect();
-      document.body.removeChild(script);
-    };
-  }, [token, sdkPlayer]);
 
   const openPlaylist = async (pl: SpotifyPlaylistResponse) => {
     if (!token) return;
@@ -137,13 +99,7 @@ export default function WebPlayerPage() {
       await pausePlayback(token, deviceId ?? undefined);
       setIsPlaying(false);
     } else {
-      await sdkPlayer?.activateElement?.();
-      await startPlayback(
-        token,
-        selected.uri,
-        currentTrackIndex,
-        deviceId ?? undefined
-      );
+      await startPlayback(token, selected.uri, currentTrackIndex, deviceId ?? undefined);
       setIsPlaying(true);
     }
   };
@@ -175,14 +131,12 @@ export default function WebPlayerPage() {
   const handleSeek = async (ms: number) => {
     if (!token) return;
     await seekPlayback(token, ms, deviceId ?? undefined);
-    if (sdkPlayer) await sdkPlayer.seek(ms);
     setPosition(ms);
   };
 
   const handleVolumeChange = async (v: number) => {
-    if (!token || !sdkPlayer) return;
+    if (!token) return;
     setVolume(v);
-    await sdkPlayer.setVolume(v);
     await apiSetVolume(token, Math.round(v * 100), deviceId ?? undefined);
   };
 
@@ -223,7 +177,6 @@ export default function WebPlayerPage() {
       currentTrack={currentTrack}
       isPlaying={isPlaying}
       controlsDisabled={controlsDisabled}
-      deviceError={deviceError}
       onTogglePlay={togglePlay}
       onPrev={playPrev}
       onNext={playNext}

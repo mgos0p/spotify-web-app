@@ -6,6 +6,7 @@ import {
   FaStepForward,
   FaRandom,
   FaRedoAlt,
+  FaVolumeUp,
 } from "react-icons/fa";
 
 /**
@@ -176,26 +177,30 @@ export const Player: React.FC<PlayerProps> = ({
         />
         {/**
          * Volume slider clamped between 0 and 1 for accessibility and to
-         * prevent out-of-range values.
+         * prevent out-of-range values. A speaker icon provides a clearer
+         * affordance for the control.
          */}
-        <input
-          type="range"
-          min={0}
-          max={1}
-          step={0.01}
-          value={Math.min(Math.max(volume, 0), 1)}
-          onChange={
-            controlsDisabled
-              ? undefined
-              : (e) =>
-                  onVolumeChange(
-                    Math.min(Math.max(Number(e.target.value), 0), 1)
-                  )
-          }
-          className="w-1/2 mt-4"
-          aria-label="Volume"
-          disabled={controlsDisabled}
-        />
+        <div className="flex items-center w-1/2 mt-4">
+          <FaVolumeUp className="mr-2" />
+          <input
+            type="range"
+            min={0}
+            max={1}
+            step={0.01}
+            value={Math.min(Math.max(volume, 0), 1)}
+            onChange={
+              controlsDisabled
+                ? undefined
+                : (e) =>
+                    onVolumeChange(
+                      Math.min(Math.max(Number(e.target.value), 0), 1)
+                    )
+            }
+            className="w-full"
+            aria-label="Volume"
+            disabled={controlsDisabled}
+          />
+        </div>
       </div>
       {showImage && track && (
         <div
