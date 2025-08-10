@@ -1,7 +1,6 @@
 # Spotify Client Credentials example
 
-This app retrieves information from an artist's track using [Client Credentials](https://developer.spotify.com/documentation/web-api/tutorials/code-flow)
-to grant permissions to the app.
+This app retrieves information from an artist's track using [Client Credentials](https://developer.spotify.com/documentation/web-api/tutorials/code-flow) to grant permissions to the app.
 
 ## Installation
 
