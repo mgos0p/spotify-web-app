@@ -24,6 +24,9 @@ interface WebPlayerProps {
   onVolumeChange: (v: number) => void;
   onToggleShuffle: () => void;
   onToggleRepeat: () => void;
+  devices: SpotifyDevice[];
+  deviceId: string | null;
+  onDeviceSelect: (id: string) => void;
 }
 
 /**
@@ -51,6 +54,9 @@ export const WebPlayer: React.FC<WebPlayerProps> = ({
   onVolumeChange,
   onToggleShuffle,
   onToggleRepeat,
+  devices,
+  deviceId,
+  onDeviceSelect,
 }) => (
   <div className="relative text-white">
     <Player
@@ -71,6 +77,9 @@ export const WebPlayer: React.FC<WebPlayerProps> = ({
       onVolumeChange={onVolumeChange}
       onToggleShuffle={onToggleShuffle}
       onToggleRepeat={onToggleRepeat}
+      devices={devices}
+      deviceId={deviceId}
+      onDeviceSelect={onDeviceSelect}
     />
     <div className={selected ? "pt-[50vh]" : ""}>
       <PlaylistList playlists={playlists} onSelect={onSelectPlaylist} />

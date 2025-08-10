@@ -49,6 +49,9 @@ describe("Player", () => {
           onVolumeChange={() => {}}
           onToggleShuffle={() => {}}
           onToggleRepeat={() => {}}
+          devices={[]}
+          deviceId={null}
+          onDeviceSelect={() => {}}
         />
       );
     });
@@ -75,6 +78,9 @@ describe("Player", () => {
           onVolumeChange={() => {}}
           onToggleShuffle={() => {}}
           onToggleRepeat={() => {}}
+          devices={[]}
+          deviceId={null}
+          onDeviceSelect={() => {}}
         />
       );
     });
@@ -104,6 +110,9 @@ describe("Player", () => {
           onVolumeChange={() => {}}
           onToggleShuffle={() => {}}
           onToggleRepeat={() => {}}
+          devices={[]}
+          deviceId={null}
+          onDeviceSelect={() => {}}
         />
       );
     });
@@ -141,6 +150,9 @@ describe("Player", () => {
           onVolumeChange={() => {}}
           onToggleShuffle={() => {}}
           onToggleRepeat={() => {}}
+          devices={[]}
+          deviceId={null}
+          onDeviceSelect={() => {}}
         />
       );
     });
@@ -180,6 +192,9 @@ describe("Player", () => {
           onVolumeChange={() => {}}
           onToggleShuffle={() => {}}
           onToggleRepeat={() => {}}
+          devices={[]}
+          deviceId={null}
+          onDeviceSelect={() => {}}
         />
       );
     });
@@ -223,6 +238,9 @@ describe("Player", () => {
           onVolumeChange={onVolumeChange}
           onToggleShuffle={() => {}}
           onToggleRepeat={() => {}}
+          devices={[]}
+          deviceId={null}
+          onDeviceSelect={() => {}}
         />
       );
     });
@@ -266,6 +284,9 @@ describe("Player", () => {
           onVolumeChange={onVolumeChange}
           onToggleShuffle={() => {}}
           onToggleRepeat={() => {}}
+          devices={[]}
+          deviceId={null}
+          onDeviceSelect={() => {}}
         />
       );
     });
@@ -311,6 +332,9 @@ describe("Player", () => {
           onVolumeChange={() => {}}
           onToggleShuffle={() => {}}
           onToggleRepeat={() => {}}
+          devices={[]}
+          deviceId={null}
+          onDeviceSelect={() => {}}
         />
       );
     });
@@ -351,6 +375,9 @@ describe("Player", () => {
           onVolumeChange={() => {}}
           onToggleShuffle={() => {}}
           onToggleRepeat={() => {}}
+          devices={[]}
+          deviceId={null}
+          onDeviceSelect={() => {}}
         />
       );
     });

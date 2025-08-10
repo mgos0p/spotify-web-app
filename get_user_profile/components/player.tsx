@@ -64,6 +64,12 @@ interface PlayerProps {
   onToggleShuffle: () => void;
   /** Toggle repeat handler */
   onToggleRepeat: () => void;
+  /** List of available devices */
+  devices: SpotifyDevice[];
+  /** Currently selected device id */
+  deviceId: string | null;
+  /** Device selection handler */
+  onDeviceSelect: (id: string) => void;
 }
 
 export const Player: React.FC<PlayerProps> = ({
@@ -84,6 +90,9 @@ export const Player: React.FC<PlayerProps> = ({
   onVolumeChange,
   onToggleShuffle,
   onToggleRepeat,
+  devices,
+  deviceId,
+  onDeviceSelect,
 }) => {
   const [showImage, setShowImage] = useState(false);
   if (!track) return null;
@@ -201,6 +210,23 @@ export const Player: React.FC<PlayerProps> = ({
          * affordance for the control.
          */}
         <div className="flex items-center w-1/2 mt-4">
+          <select
+            value={deviceId ?? ""}
+            onChange={
+              controlsDisabled
+                ? undefined
+                : (e) => onDeviceSelect(e.target.value)
+            }
+            disabled={controlsDisabled || devices.length === 0}
+            className="mr-4 text-black p-1 rounded"
+            aria-label="Select device"
+          >
+            {devices.map((d) => (
+              <option key={d.id} value={d.id}>
+                {d.name}
+              </option>
+            ))}
+          </select>
           <FaVolumeUp className="mr-2" />
           <input
             type="range"
