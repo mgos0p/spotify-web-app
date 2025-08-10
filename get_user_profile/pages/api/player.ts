@@ -1,17 +1,3 @@
-const fetchWithRetry = async (
-  url: string,
-  options: RequestInit,
-  retries = 3
-): Promise<Response> => {
-  for (let i = 0; i < retries; i++) {
-    const res = await fetch(url, options);
-    if (res.ok || res.status === 204) {
-      return res;
-    }
-  }
-  throw new Error(`Request failed after ${retries} attempts`);
-};
-
 export const fetchPlayerState = async (code: string): Promise<any | null> => {
   const res = await fetch("https://api.spotify.com/v1/me/player", {
     method: "GET",
@@ -34,9 +20,9 @@ export const fetchAvailableDevices = async (code: string): Promise<any[]> => {
 
 export const startPlayback = async (
   token: string,
-  deviceId?: string,
   contextUri: string,
-  offset: number
+  offset: number,
+  deviceId?: string
 ): Promise<void> => {
   await fetch(
     `https://api.spotify.com/v1/me/player/play${
@@ -96,6 +82,70 @@ export const previousTrack = async (
     }`,
     {
       method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
+};
+
+export const seekPlayback = async (
+  token: string,
+  positionMs: number,
+  deviceId?: string
+): Promise<void> => {
+  await fetch(
+    `https://api.spotify.com/v1/me/player/seek?position_ms=${positionMs}${
+      deviceId ? `&device_id=${deviceId}` : ""
+    }`,
+    {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
+};
+
+export const setVolume = async (
+  token: string,
+  volumePercent: number,
+  deviceId?: string
+): Promise<void> => {
+  await fetch(
+    `https://api.spotify.com/v1/me/player/volume?volume_percent=${volumePercent}${
+      deviceId ? `&device_id=${deviceId}` : ""
+    }`,
+    {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
+};
+
+export const setShuffle = async (
+  token: string,
+  state: boolean,
+  deviceId?: string
+): Promise<void> => {
+  await fetch(
+    `https://api.spotify.com/v1/me/player/shuffle?state=${state}${
+      deviceId ? `&device_id=${deviceId}` : ""
+    }`,
+    {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
+};
+
+export const setRepeat = async (
+  token: string,
+  state: "off" | "track" | "context",
+  deviceId?: string
+): Promise<void> => {
+  await fetch(
+    `https://api.spotify.com/v1/me/player/repeat?state=${state}${
+      deviceId ? `&device_id=${deviceId}` : ""
+    }`,
+    {
+      method: "PUT",
       headers: { Authorization: `Bearer ${token}` },
     }
   );
