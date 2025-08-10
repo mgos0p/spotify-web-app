@@ -31,6 +31,8 @@ export default function WebPlayerPage() {
     null
   );
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
+  const [currentTrack, setCurrentTrack] =
+    useState<SpotifyTrackObject | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [deviceId, setDeviceId] = useState<string | null>(null);
   const [controlsDisabled] = useState(false);
@@ -42,7 +44,12 @@ export default function WebPlayerPage() {
     "off"
   );
   const playerRef = useRef<any>(null);
+  const selectedRef = useRef<SpotifyPlaylistResponse | null>(null);
   const [activated, setActivated] = useState(false);
+
+  useEffect(() => {
+    selectedRef.current = selected;
+  }, [selected]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -73,6 +80,18 @@ export default function WebPlayerPage() {
       player.addListener("ready", ({ device_id }: any) => {
         setDeviceId(device_id);
       });
+      player.addListener("player_state_changed", (state: any) => {
+        if (!state) return;
+        setPosition(state.position);
+        setDuration(state.duration);
+        setIsPlaying(!state.paused);
+        setCurrentTrack(state.track_window?.current_track ?? null);
+        const idx =
+          selectedRef.current?.tracks?.items.findIndex(
+            (t) => t.track.id === state.track_window?.current_track?.id
+          ) ?? -1;
+        if (idx !== -1) setCurrentTrackIndex(idx);
+      });
       player.connect();
       playerRef.current = player;
     };
@@ -87,24 +106,24 @@ export default function WebPlayerPage() {
   }, [token]);
 
   useEffect(() => {
-    if (!token) return;
+    if (!token || !deviceId) return;
     const updatePlayback = async () => {
       const data = await fetchPlayerState(token);
-      if (!data) return;
-      if (data.device && (!deviceId || data.device.id === deviceId)) {
-        setDeviceId(data.device.id);
-        setVolume((data.device.volume_percent ?? 100) / 100);
-      }
-      setIsPlaying(data.is_playing);
-      setPosition(data.progress_ms ?? 0);
-      setDuration(data.item?.duration_ms ?? 0);
+      if (!data || data.device?.id !== deviceId) return;
+      setVolume((data.device.volume_percent ?? 100) / 100);
       setShuffleState(data.shuffle_state ?? false);
       setRepeatState(data.repeat_state ?? "off");
+      setCurrentTrack(data.item ?? null);
+      const idx =
+        selected?.tracks?.items.findIndex(
+          (t) => t.track.id === data.item?.id
+        ) ?? -1;
+      if (idx !== -1) setCurrentTrackIndex(idx);
     };
     updatePlayback();
     const interval = setInterval(updatePlayback, 1000);
     return () => clearInterval(interval);
-  }, [token, deviceId]);
+  }, [token, deviceId, selected]);
 
   const openPlaylist = async (pl: SpotifyPlaylistResponse) => {
     if (!token) return;
@@ -113,27 +132,32 @@ export default function WebPlayerPage() {
     const firstPlayable =
       detail.tracks?.items.findIndex((t) => t.track.is_playable !== false) ?? 0;
     setCurrentTrackIndex(firstPlayable === -1 ? 0 : firstPlayable);
+    setCurrentTrack(
+      detail.tracks?.items[firstPlayable === -1 ? 0 : firstPlayable]?.track ??
+        null
+    );
+    setDuration(
+      detail.tracks?.items[firstPlayable === -1 ? 0 : firstPlayable]?.track
+        ?.duration_ms ?? 0
+    );
     setIsPlaying(false);
   };
 
-  const currentTrack =
-    selected?.tracks?.items[currentTrackIndex]?.track ?? null;
-
   const togglePlay = async () => {
-    if (!token || !selected) return;
+    if (!token || !selected || !deviceId) return;
     if (!activated) {
       await playerRef.current?.activateElement?.();
       setActivated(true);
     }
     if (isPlaying) {
-      await pausePlayback(token, deviceId ?? undefined);
+      await pausePlayback(token, deviceId);
       setIsPlaying(false);
     } else {
       await startPlayback(
         token,
         selected.uri,
         currentTrackIndex,
-        deviceId ?? undefined
+        deviceId
       );
       setIsPlaying(true);
     }
@@ -152,14 +176,20 @@ export default function WebPlayerPage() {
   const playNext = async () => {
     if (!token || !selected?.tracks) return;
     await nextTrack(token, deviceId ?? undefined);
-    setCurrentTrackIndex(findPlayableIndex(currentTrackIndex, 1));
+    const idx = findPlayableIndex(currentTrackIndex, 1);
+    setCurrentTrackIndex(idx);
+    setCurrentTrack(selected.tracks.items[idx].track);
+    setDuration(selected.tracks.items[idx].track.duration_ms ?? 0);
     setIsPlaying(true);
   };
 
   const playPrev = async () => {
     if (!token || !selected?.tracks) return;
     await previousTrack(token, deviceId ?? undefined);
-    setCurrentTrackIndex(findPlayableIndex(currentTrackIndex, -1));
+    const idx = findPlayableIndex(currentTrackIndex, -1);
+    setCurrentTrackIndex(idx);
+    setCurrentTrack(selected.tracks.items[idx].track);
+    setDuration(selected.tracks.items[idx].track.duration_ms ?? 0);
     setIsPlaying(true);
   };
 
@@ -170,9 +200,10 @@ export default function WebPlayerPage() {
   };
 
   const handleVolumeChange = async (v: number) => {
-    if (!token) return;
+    if (!token || !deviceId) return;
     setVolume(v);
-    await apiSetVolume(token, Math.round(v * 100), deviceId ?? undefined);
+    await apiSetVolume(token, Math.round(v * 100), deviceId);
+    playerRef.current?.setVolume?.(v);
   };
 
   const toggleShuffle = async () => {
