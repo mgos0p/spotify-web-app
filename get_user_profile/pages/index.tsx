@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { Profile } from "../components/profile";
 import { Loader } from "../components/loader";
-import { fetchProfile } from "../pages/api/profile";
+import { fetchProfile } from "../lib/spotify/profile";
 import {
   redirectToAuthCodeFlow,
   getAccessToken,

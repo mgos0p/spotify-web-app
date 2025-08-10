@@ -5,7 +5,7 @@ import React, { useEffect, useRef, useState } from "react";
 import Script from "next/script";
 import { useAuth } from "../src/AuthContext";
 import { Loader } from "../components/loader";
-import { fetchPlaylists, fetchPlaylist } from "./api/playlist";
+import { fetchPlaylists, fetchPlaylist } from "../lib/spotify/playlist";
 import {
   fetchPlayerState,
   fetchAvailableDevices,
@@ -19,7 +19,7 @@ import {
   setRepeat as apiSetRepeat,
   resumePlayback,
   transferPlayback,
-} from "./api/player";
+} from "../lib/spotify/player";
 import { redirectToAuthCodeFlow } from "../src/authCodeWithPkce";
 import { WebPlayer } from "../components/webPlayer";
 

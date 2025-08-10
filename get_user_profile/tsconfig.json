@@ -20,6 +20,6 @@
     "jsx": "preserve",
     "sourceMap": true
   },
-  "include": ["src", "pages", "components"],
+  "include": ["src", "pages", "components", "lib"],
   "exclude": ["node_modules"]
 }
