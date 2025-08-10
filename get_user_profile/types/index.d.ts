@@ -1,4 +1,4 @@
-interface UserProfile {
+export interface UserProfile {
   country: string;
   display_name: string;
   email: string;
@@ -16,21 +16,25 @@ interface UserProfile {
   uri: string;
 }
 
-interface Image {
+export interface Image {
   url: string;
   height: number;
   width: number;
 }
 
-interface ImportMetaEnv {
-  readonly VITE_SPOTIFY_CLIENT_ID: string;
+declare global {
+  interface ImportMetaEnv {
+    readonly VITE_SPOTIFY_CLIENT_ID: string;
+  }
+
+  interface ImportMeta {
+    readonly env: ImportMetaEnv;
+  }
+
+  interface Window {
+    onSpotifyWebPlaybackSDKReady?: () => void;
+    Spotify: any;
+  }
 }
 
-interface ImportMeta {
-  readonly env: ImportMetaEnv;
-}
-
-interface Window {
-  onSpotifyWebPlaybackSDKReady?: () => void;
-  Spotify: any;
-}
+export {};

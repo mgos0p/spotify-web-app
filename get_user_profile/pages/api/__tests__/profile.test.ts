@@ -1,4 +1,5 @@
 import { fetchProfile } from "../profile";
+import type { UserProfile } from "../../../types";
 
 describe("fetchProfile", () => {
   const token = "test-token";

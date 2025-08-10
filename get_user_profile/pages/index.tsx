@@ -8,6 +8,7 @@ import {
   getAccessToken,
 } from "../src/authCodeWithPkce";
 import { useAuth } from "../src/AuthContext";
+import type { UserProfile } from "../types";
 
 const clientId = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID;
 export default function Home() {
