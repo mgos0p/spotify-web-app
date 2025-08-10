@@ -62,7 +62,7 @@ export default function Home() {
     };
 
     fetchData();
-  }, [token]);
+  }, [token, router, setToken]);
 
   if (error) {
     return <div>{error}</div>;
