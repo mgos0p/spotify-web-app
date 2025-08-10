@@ -1,5 +1,5 @@
 {
-  "name": "vite-project",
+  "name": "get_user_profile",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -22,8 +22,7 @@
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.17",
     "ts-jest": "^29.4.1",
-    "typescript": "^5.4.5",
-    "vite": "^7.0.6"
+    "typescript": "^5.4.5"
   },
   "dependencies": {
     "chart.js": "^4.4.1",
