@@ -21,6 +21,9 @@ async function getToken() {
       'Authorization': 'Basic ' + (Buffer.from(client_id + ':' + client_secret).toString('base64')),
     },
   });
+  if (!response.ok) {
+    throw new Error(`Token request failed: ${response.status} ${response.statusText}`);
+  }
 
   return await response.json();
 }
@@ -30,12 +33,18 @@ async function getTrackInfo(access_token) {
     method: 'GET',
     headers: { 'Authorization': 'Bearer ' + access_token },
   });
+  if (!response.ok) {
+    throw new Error(`Track request failed: ${response.status} ${response.statusText}`);
+  }
 
   return await response.json();
 }
 
-getToken().then(response => {
-  getTrackInfo(response.access_token).then(profile => {
+getToken()
+  .then(response => getTrackInfo(response.access_token))
+  .then(profile => {
     console.log(profile)
   })
-});
+  .catch(err => {
+    console.error('Error fetching data:', err);
+  });
