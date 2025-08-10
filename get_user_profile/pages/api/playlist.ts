@@ -10,6 +10,9 @@ export const fetchPlaylists = async (
       headers: { Authorization: `Bearer ${code}` },
     }
   );
+  if (!result.ok) {
+    throw new Error("Failed to fetch playlists");
+  }
   return await result.json();
 };
 
@@ -26,6 +29,9 @@ export const fetchPlaylist = async (
       headers: { Authorization: `Bearer ${code}` },
     }
   );
+  if (!result.ok) {
+    throw new Error("Failed to fetch playlist");
+  }
   return await result.json();
 };
 export const fetchPlaylistItems = async (
@@ -36,5 +42,8 @@ export const fetchPlaylistItems = async (
     method: "GET",
     headers: { Authorization: `Bearer ${code}` },
   });
+  if (!result.ok) {
+    throw new Error("Failed to fetch playlist items");
+  }
   return await result.json();
 };

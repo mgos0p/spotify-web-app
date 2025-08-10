@@ -1,4 +1,4 @@
-import { fetchAudioAnalysis } from "../track";
+import { fetchAudioAnalysis, fetchAudioFeatures } from "../track";
 
 describe("fetchAudioAnalysis", () => {
   const token = "test-token";
@@ -113,5 +113,31 @@ describe("fetchAudioAnalysis", () => {
 
     expect(result).toEqual(partialResponse);
     expect((result as any).sections).toBeUndefined();
+  });
+});
+
+describe("fetchAudioFeatures", () => {
+  const token = "test-token";
+  const trackId = "123";
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it("throws an error when the fetch response is not ok", async () => {
+    const fetchMock = jest.spyOn(global, "fetch").mockResolvedValue({
+      ok: false,
+    } as any);
+
+    await expect(fetchAudioFeatures(token, trackId)).rejects.toThrow(
+      "Failed to fetch audio features"
+    );
+    expect(fetchMock).toHaveBeenCalledWith(
+      `https://api.spotify.com/v1/audio-features/${trackId}`,
+      {
+        method: "GET",
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
   });
 });
