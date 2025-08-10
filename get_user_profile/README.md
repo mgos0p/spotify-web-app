@@ -26,3 +26,7 @@ Install dependencies and start the development server:
 npm install
 npm run dev
 ```
+
+## 言語ガイドライン
+
+このプロジェクトではコメントやドキュメントを日本語で記述し、言語を統一します。

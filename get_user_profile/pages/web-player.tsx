@@ -1,6 +1,6 @@
-// Web player page that lists user playlists and, upon selection, opens a
-// slide-in Player modal for controlling playback via Spotify's Web API.
-// The modal consumes the first playable track of the chosen playlist.
+// ユーザープレイリストを一覧表示し、選択すると
+// Spotify Web APIで再生を操作できるスライド式プレイヤーモーダルを開くページ。
+// モーダルは選択したプレイリストの最初に再生可能なトラックを利用する。
 import React, { useEffect, useRef, useState } from "react";
 import Script from "next/script";
 import { useAuth } from "../src/AuthContext";

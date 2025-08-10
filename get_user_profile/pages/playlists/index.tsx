@@ -39,7 +39,7 @@ export default function PlaylistsPage() {
           setHasMore(false);
           return;
         }
-        // Deduplicate playlists by ID before updating state
+        // 状態を更新する前にIDでプレイリストの重複を排除
         setPlaylists((prev) => {
           const existingItems = prev?.items || [];
           const newItems = playlistsData.items.filter(

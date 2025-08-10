@@ -20,7 +20,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [refreshToken, setRefreshTokenState] = useState<string | null>(null);
   const [expiresAt, setExpiresAt] = useState<number | null>(null);
 
-  // Load tokens from localStorage on initial mount
+  // 初回マウント時に localStorage からトークンを読み込む
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
@@ -41,7 +41,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, []);
 
-  // Automatically refresh the access token before it expires
+  // アクセストークンの有効期限が切れる前に自動更新する
   useEffect(() => {
     if (!token || !refreshToken || !expiresAt) return;
     const clientId = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID;

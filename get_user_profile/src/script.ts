@@ -1,5 +1,5 @@
-// Because this is a literal single page application
-// we detect a callback from Spotify by checking for the hash fragment
+// 文字通りのシングルページアプリであるため
+// ハッシュフラグメントを確認してSpotifyからのコールバックを検出する
 import {
   redirectToAuthCodeFlow,
   getAccessToken,
@@ -45,7 +45,7 @@ async function getStoredAccessToken(): Promise<string | null> {
 
     if (expires) {
       const expiresAt = parseInt(expires, 10);
-      // refresh if the token is expired or will expire within the next minute
+      // トークンが期限切れか1分以内に期限切れとなる場合は更新する
       if (expiresAt - Date.now() < 60_000) {
         if (!refreshToken) return null;
         try {
