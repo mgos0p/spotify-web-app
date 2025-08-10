@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { FaPlay, FaPause, FaStepBackward, FaStepForward } from "react-icons/fa";
+import {
+  FaPlay,
+  FaPause,
+  FaStepBackward,
+  FaStepForward,
+  FaRandom,
+  FaRedoAlt,
+} from "react-icons/fa";
 
 /**
  * Modal-like player that slides down from the top of the page to control the
@@ -10,7 +17,7 @@ interface PlayerProps {
   /** Whether the modal should be shown */
   visible: boolean;
   /** Track information for the currently selected song */
-  track: SpotifyTrack | null;
+  track: SpotifyTrackObject | null;
   /** Indicates if Spotify is currently playing */
   isPlaying: boolean;
   /**
@@ -26,6 +33,24 @@ interface PlayerProps {
   onNext: () => void;
   /** Called when the × button is clicked to close the modal */
   onClose: () => void;
+  /** Current playback position in ms */
+  position: number;
+  /** Duration of current track in ms */
+  duration: number;
+  /** Volume 0-1 */
+  volume: number;
+  /** Whether shuffle mode is enabled */
+  shuffle: boolean;
+  /** Current repeat mode */
+  repeat: "off" | "track" | "context";
+  /** Seek handler */
+  onSeek: (ms: number) => void;
+  /** Volume change handler */
+  onVolumeChange: (v: number) => void;
+  /** Toggle shuffle handler */
+  onToggleShuffle: () => void;
+  /** Toggle repeat handler */
+  onToggleRepeat: () => void;
 }
 
 export const Player: React.FC<PlayerProps> = ({
@@ -37,6 +62,15 @@ export const Player: React.FC<PlayerProps> = ({
   onPrev,
   onNext,
   onClose,
+  position,
+  duration,
+  volume,
+  shuffle,
+  repeat,
+  onSeek,
+  onVolumeChange,
+  onToggleShuffle,
+  onToggleRepeat,
 }) => {
   const [showImage, setShowImage] = useState(false);
   if (!track) return null;
@@ -59,15 +93,23 @@ export const Player: React.FC<PlayerProps> = ({
             onClick={() => setShowImage(true)}
           />
         )}
-        <div className="flex space-x-6 text-4xl">
+        <div className="flex space-x-6 text-4xl items-center">
+          <FaRandom
+            className={
+              controlsDisabled
+                ? "opacity-50 cursor-not-allowed"
+                : shuffle
+                ? "text-green-500 cursor-pointer"
+                : "cursor-pointer"
+            }
+            onClick={controlsDisabled ? undefined : onToggleShuffle}
+          />
           <FaStepBackward
             className={
               controlsDisabled
                 ? "opacity-50 cursor-not-allowed"
                 : "cursor-pointer"
             }
-            // Handlers become undefined when controls are disabled, making
-            // these icons effectively no-ops.
             onClick={controlsDisabled ? undefined : onPrev}
           />
           {isPlaying ? (
@@ -97,7 +139,63 @@ export const Player: React.FC<PlayerProps> = ({
             }
             onClick={controlsDisabled ? undefined : onNext}
           />
+          <FaRedoAlt
+            className={
+              controlsDisabled
+                ? "opacity-50 cursor-not-allowed"
+                : repeat !== "off"
+                ? "text-green-500 cursor-pointer"
+                : "cursor-pointer"
+            }
+            onClick={controlsDisabled ? undefined : onToggleRepeat}
+          />
         </div>
+        {/**
+         * Slider for seeking within the track. Clamp values to avoid NaN or
+         * values outside the duration range, especially when duration is 0.
+         */}
+        <input
+          type="range"
+          min={0}
+          max={duration > 0 ? duration : 0}
+          value={Math.min(Math.max(position, 0), duration > 0 ? duration : 0)}
+          onChange={
+            controlsDisabled
+              ? undefined
+              : (e) =>
+                  onSeek(
+                    Math.min(
+                      Math.max(Number(e.target.value), 0),
+                      duration > 0 ? duration : 0
+                    )
+                  )
+          }
+          className="w-3/4 mt-4"
+          aria-label="Seek position"
+          disabled={controlsDisabled}
+        />
+        {/**
+         * Volume slider clamped between 0 and 1 for accessibility and to
+         * prevent out-of-range values.
+         */}
+        <input
+          type="range"
+          min={0}
+          max={1}
+          step={0.01}
+          value={Math.min(Math.max(volume, 0), 1)}
+          onChange={
+            controlsDisabled
+              ? undefined
+              : (e) =>
+                  onVolumeChange(
+                    Math.min(Math.max(Number(e.target.value), 0), 1)
+                  )
+          }
+          className="w-1/2 mt-4"
+          aria-label="Volume"
+          disabled={controlsDisabled}
+        />
       </div>
       {showImage && track && (
         <div

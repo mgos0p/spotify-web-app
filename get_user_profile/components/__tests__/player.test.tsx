@@ -40,6 +40,15 @@ describe("Player", () => {
           onPrev={() => {}}
           onNext={() => {}}
           onClose={() => {}}
+          position={0}
+          duration={0}
+          volume={1}
+          shuffle={false}
+          repeat="off"
+          onSeek={() => {}}
+          onVolumeChange={() => {}}
+          onToggleShuffle={() => {}}
+          onToggleRepeat={() => {}}
         />
       );
     });
@@ -57,6 +66,15 @@ describe("Player", () => {
           onPrev={() => {}}
           onNext={() => {}}
           onClose={() => {}}
+          position={0}
+          duration={0}
+          volume={1}
+          shuffle={false}
+          repeat="off"
+          onSeek={() => {}}
+          onVolumeChange={() => {}}
+          onToggleShuffle={() => {}}
+          onToggleRepeat={() => {}}
         />
       );
     });
@@ -77,6 +95,15 @@ describe("Player", () => {
           onPrev={() => {}}
           onNext={() => {}}
           onClose={onClose}
+          position={0}
+          duration={0}
+          volume={1}
+          shuffle={false}
+          repeat="off"
+          onSeek={() => {}}
+          onVolumeChange={() => {}}
+          onToggleShuffle={() => {}}
+          onToggleRepeat={() => {}}
         />
       );
     });
@@ -105,19 +132,28 @@ describe("Player", () => {
           onPrev={onPrev}
           onNext={onNext}
           onClose={() => {}}
+          position={0}
+          duration={0}
+          volume={1}
+          shuffle={false}
+          repeat="off"
+          onSeek={() => {}}
+          onVolumeChange={() => {}}
+          onToggleShuffle={() => {}}
+          onToggleRepeat={() => {}}
         />
       );
     });
 
     let icons = container.querySelectorAll("svg");
-    expect(icons[0].getAttribute("class")).toContain("cursor-pointer");
     expect(icons[1].getAttribute("class")).toContain("cursor-pointer");
     expect(icons[2].getAttribute("class")).toContain("cursor-pointer");
+    expect(icons[3].getAttribute("class")).toContain("cursor-pointer");
 
     await act(async () => {
-      icons[0].dispatchEvent(new MouseEvent("click", { bubbles: true }));
       icons[1].dispatchEvent(new MouseEvent("click", { bubbles: true }));
       icons[2].dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      icons[3].dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
 
     expect(onPrev).toHaveBeenCalledTimes(1);
@@ -135,24 +171,123 @@ describe("Player", () => {
           onPrev={onPrev}
           onNext={onNext}
           onClose={() => {}}
+          position={0}
+          duration={0}
+          volume={1}
+          shuffle={false}
+          repeat="off"
+          onSeek={() => {}}
+          onVolumeChange={() => {}}
+          onToggleShuffle={() => {}}
+          onToggleRepeat={() => {}}
         />
       );
     });
-
     icons = container.querySelectorAll("svg");
-    expect(icons[0].getAttribute("class")).toContain("cursor-not-allowed");
     expect(icons[1].getAttribute("class")).toContain("cursor-not-allowed");
     expect(icons[2].getAttribute("class")).toContain("cursor-not-allowed");
+    expect(icons[3].getAttribute("class")).toContain("cursor-not-allowed");
 
     await act(async () => {
-      icons[0].dispatchEvent(new MouseEvent("click", { bubbles: true }));
       icons[1].dispatchEvent(new MouseEvent("click", { bubbles: true }));
       icons[2].dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      icons[3].dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
 
     expect(onPrev).toHaveBeenCalledTimes(1);
     expect(onTogglePlay).toHaveBeenCalledTimes(1);
     expect(onNext).toHaveBeenCalledTimes(1);
+  });
+
+  it("clamps slider values and prevents changes when disabled", async () => {
+    const onSeek = jest.fn();
+    const onVolumeChange = jest.fn();
+
+    await act(async () => {
+      root.render(
+        <Player
+          visible={true}
+          track={track}
+          isPlaying={false}
+          controlsDisabled={false}
+          onTogglePlay={() => {}}
+          onPrev={() => {}}
+          onNext={() => {}}
+          onClose={() => {}}
+          position={2000}
+          duration={1000}
+          volume={2}
+          shuffle={false}
+          repeat="off"
+          onSeek={onSeek}
+          onVolumeChange={onVolumeChange}
+          onToggleShuffle={() => {}}
+          onToggleRepeat={() => {}}
+        />
+      );
+    });
+
+    let sliders = container.querySelectorAll('input[type="range"]');
+    const seek = sliders[0] as HTMLInputElement;
+    const volumeSlider = sliders[1] as HTMLInputElement;
+
+    // Initial values are clamped
+    expect(seek.value).toBe("1000");
+    expect(volumeSlider.value).toBe("1");
+
+    // Simulate user moving sliders beyond bounds
+    seek.value = "1500";
+    volumeSlider.value = "2";
+    await act(async () => {
+      seek.dispatchEvent(new Event("input", { bubbles: true }));
+      volumeSlider.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+
+    expect(onSeek).toHaveBeenCalledWith(1000);
+    expect(onVolumeChange).toHaveBeenCalledWith(1);
+
+    await act(async () => {
+      root.render(
+        <Player
+          visible={true}
+          track={track}
+          isPlaying={false}
+          controlsDisabled={true}
+          onTogglePlay={() => {}}
+          onPrev={() => {}}
+          onNext={() => {}}
+          onClose={() => {}}
+          position={500}
+          duration={0}
+          volume={0.5}
+          shuffle={false}
+          repeat="off"
+          onSeek={onSeek}
+          onVolumeChange={onVolumeChange}
+          onToggleShuffle={() => {}}
+          onToggleRepeat={() => {}}
+        />
+      );
+    });
+
+    sliders = container.querySelectorAll('input[type="range"]');
+    const disabledSeek = sliders[0] as HTMLInputElement;
+    const disabledVolume = sliders[1] as HTMLInputElement;
+
+    expect(disabledSeek.value).toBe("0");
+    expect(disabledSeek.disabled).toBe(true);
+    expect(disabledVolume.disabled).toBe(true);
+
+    disabledSeek.value = "100";
+    disabledVolume.value = "0.9";
+    await act(async () => {
+      disabledSeek.dispatchEvent(new Event("input", { bubbles: true }));
+      disabledVolume.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+
+    // Handlers should not fire again when controls are disabled
+    expect(onSeek).toHaveBeenCalledTimes(1);
+    expect(onVolumeChange).toHaveBeenCalledTimes(1);
   });
 
   it("returns null when track is missing", async () => {
@@ -167,6 +302,15 @@ describe("Player", () => {
           onPrev={() => {}}
           onNext={() => {}}
           onClose={() => {}}
+          position={0}
+          duration={0}
+          volume={1}
+          shuffle={false}
+          repeat="off"
+          onSeek={() => {}}
+          onVolumeChange={() => {}}
+          onToggleShuffle={() => {}}
+          onToggleRepeat={() => {}}
         />
       );
     });

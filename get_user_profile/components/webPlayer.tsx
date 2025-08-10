@@ -5,7 +5,7 @@ import { PlaylistList } from "./playlistList";
 interface WebPlayerProps {
   playlists: SpotifyPlaylistsResponse;
   selected: SpotifyPlaylistResponse | null;
-  currentTrack: SpotifyTrack | null;
+  currentTrack: SpotifyTrackObject | null;
   isPlaying: boolean;
   controlsDisabled: boolean;
   deviceError: string | null;
@@ -16,6 +16,15 @@ interface WebPlayerProps {
   onSelectPlaylist: (
     pl: SpotifyPlaylistsResponse["items"][number]
   ) => void;
+  position: number;
+  duration: number;
+  volume: number;
+  shuffle: boolean;
+  repeat: "off" | "track" | "context";
+  onSeek: (ms: number) => void;
+  onVolumeChange: (v: number) => void;
+  onToggleShuffle: () => void;
+  onToggleRepeat: () => void;
 }
 
 /**
@@ -35,6 +44,15 @@ export const WebPlayer: React.FC<WebPlayerProps> = ({
   onNext,
   onClose,
   onSelectPlaylist,
+  position,
+  duration,
+  volume,
+  shuffle,
+  repeat,
+  onSeek,
+  onVolumeChange,
+  onToggleShuffle,
+  onToggleRepeat,
 }) => (
   <div className="relative text-white">
     <Player
@@ -46,6 +64,15 @@ export const WebPlayer: React.FC<WebPlayerProps> = ({
       onPrev={onPrev}
       onNext={onNext}
       onClose={onClose}
+      position={position}
+      duration={duration}
+      volume={volume}
+      shuffle={shuffle}
+      repeat={repeat}
+      onSeek={onSeek}
+      onVolumeChange={onVolumeChange}
+      onToggleShuffle={onToggleShuffle}
+      onToggleRepeat={onToggleRepeat}
     />
     {deviceError && (
       <p className="text-center text-red-500 mt-4">{deviceError}</p>
