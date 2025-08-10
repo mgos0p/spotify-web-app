@@ -1,7 +1,8 @@
 // Web player page that lists user playlists and, upon selection, opens a
 // slide-in Player modal for controlling playback via Spotify's Web API.
 // The modal consumes the first playable track of the chosen playlist.
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import Script from "next/script";
 import { useAuth } from "../src/AuthContext";
 import { Loader } from "../components/loader";
 import { fetchPlaylists, fetchPlaylist } from "./api/playlist";
@@ -40,6 +41,8 @@ export default function WebPlayerPage() {
   const [repeat, setRepeatState] = useState<"off" | "track" | "context">(
     "off"
   );
+  const playerRef = useRef<any>(null);
+  const [activated, setActivated] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -58,6 +61,29 @@ export default function WebPlayerPage() {
       }
     };
     fetchData();
+  }, [token, deviceId]);
+
+  useEffect(() => {
+    if (!token || playerRef.current) return;
+    const initialize = () => {
+      const player = new (window as any).Spotify.Player({
+        name: "Web Playback SDK Player",
+        getOAuthToken: (cb: (t: string) => void) => cb(token),
+      });
+      player.addListener("ready", ({ device_id }: any) => {
+        setDeviceId(device_id);
+      });
+      player.connect();
+      playerRef.current = player;
+    };
+    if ((window as any).Spotify) {
+      initialize();
+    } else {
+      (window as any).onSpotifyWebPlaybackSDKReady = initialize;
+    }
+    return () => {
+      playerRef.current?.disconnect?.();
+    };
   }, [token]);
 
   useEffect(() => {
@@ -65,7 +91,7 @@ export default function WebPlayerPage() {
     const updatePlayback = async () => {
       const data = await fetchPlayerState(token);
       if (!data) return;
-      if (data.device) {
+      if (data.device && (!deviceId || data.device.id === deviceId)) {
         setDeviceId(data.device.id);
         setVolume((data.device.volume_percent ?? 100) / 100);
       }
@@ -78,7 +104,7 @@ export default function WebPlayerPage() {
     updatePlayback();
     const interval = setInterval(updatePlayback, 1000);
     return () => clearInterval(interval);
-  }, [token]);
+  }, [token, deviceId]);
 
   const openPlaylist = async (pl: SpotifyPlaylistResponse) => {
     if (!token) return;
@@ -95,11 +121,20 @@ export default function WebPlayerPage() {
 
   const togglePlay = async () => {
     if (!token || !selected) return;
+    if (!activated) {
+      await playerRef.current?.activateElement?.();
+      setActivated(true);
+    }
     if (isPlaying) {
       await pausePlayback(token, deviceId ?? undefined);
       setIsPlaying(false);
     } else {
-      await startPlayback(token, selected.uri, currentTrackIndex, deviceId ?? undefined);
+      await startPlayback(
+        token,
+        selected.uri,
+        currentTrackIndex,
+        deviceId ?? undefined
+      );
       setIsPlaying(true);
     }
   };
@@ -171,26 +206,29 @@ export default function WebPlayerPage() {
     return <Loader />;
   }
   return (
-    <WebPlayer
-      playlists={playlists}
-      selected={selected}
-      currentTrack={currentTrack}
-      isPlaying={isPlaying}
-      controlsDisabled={controlsDisabled}
-      onTogglePlay={togglePlay}
-      onPrev={playPrev}
-      onNext={playNext}
-      onClose={closePlayer}
-      onSelectPlaylist={openPlaylist}
-      position={position}
-      duration={duration}
-      volume={volume}
-      shuffle={shuffle}
-      repeat={repeat}
-      onSeek={handleSeek}
-      onVolumeChange={handleVolumeChange}
-      onToggleShuffle={toggleShuffle}
-      onToggleRepeat={cycleRepeat}
-    />
+    <>
+      <Script src="https://sdk.scdn.co/spotify-player.js" strategy="afterInteractive" />
+      <WebPlayer
+        playlists={playlists}
+        selected={selected}
+        currentTrack={currentTrack}
+        isPlaying={isPlaying}
+        controlsDisabled={controlsDisabled}
+        onTogglePlay={togglePlay}
+        onPrev={playPrev}
+        onNext={playNext}
+        onClose={closePlayer}
+        onSelectPlaylist={openPlaylist}
+        position={position}
+        duration={duration}
+        volume={volume}
+        shuffle={shuffle}
+        repeat={repeat}
+        onSeek={handleSeek}
+        onVolumeChange={handleVolumeChange}
+        onToggleShuffle={toggleShuffle}
+        onToggleRepeat={cycleRepeat}
+      />
+    </>
   );
 }
