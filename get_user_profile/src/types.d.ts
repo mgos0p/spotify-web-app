@@ -29,3 +29,8 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
+
+interface Window {
+  onSpotifyWebPlaybackSDKReady?: () => void;
+  Spotify: any;
+}
