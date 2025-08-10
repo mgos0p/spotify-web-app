@@ -1,10 +1,14 @@
-export const fetchProfile = async (code: string): Promise<UserProfile> => {
-  const result = await fetch("https://api.spotify.com/v1/me", {
+export const fetchProfile = async (token: string): Promise<UserProfile> => {
+  const response = await fetch("https://api.spotify.com/v1/me", {
     method: "GET",
-    headers: { Authorization: `Bearer ${code}` },
+    headers: { Authorization: `Bearer ${token}` },
   });
-  if (!result.ok) {
-    throw new Error("Failed to fetch profile");
+
+  if (!response.ok) {
+    throw new Error(
+      `Failed to fetch profile: ${response.status} ${response.statusText}`
+    );
   }
-  return await result.json();
+
+  return await response.json();
 };
