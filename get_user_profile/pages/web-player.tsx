@@ -49,6 +49,7 @@ export default function WebPlayerPage() {
   const selectedRef = useRef<SpotifyPlaylistResponse | null>(null);
   const [activated, setActivated] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
+  const deviceActiveRef = useRef(false);
 
   useEffect(() => {
     selectedRef.current = selected;
@@ -113,6 +114,7 @@ export default function WebPlayerPage() {
     const updatePlayback = async () => {
       const data = await fetchPlayerState(token);
       if (!data || data.device?.id !== deviceId) return;
+      deviceActiveRef.current = true;
       setVolume((data.device.volume_percent ?? 100) / 100);
       setShuffleState(data.shuffle_state ?? false);
       setRepeatState(data.repeat_state ?? "off");
@@ -147,13 +149,27 @@ export default function WebPlayerPage() {
     setHasStarted(false);
   };
 
+  const ensureDeviceActive = async () => {
+    if (!token || !deviceId || deviceActiveRef.current) return;
+    await transferPlayback(token, deviceId);
+    for (let i = 0; i < 10; i++) {
+      const data = await fetchPlayerState(token);
+      if (data?.device?.id === deviceId) {
+        deviceActiveRef.current = true;
+        playerRef.current?.setVolume?.(volume);
+        break;
+      }
+      await new Promise((r) => setTimeout(r, 500));
+    }
+  };
+
   const togglePlay = async () => {
     if (!token || !selected || !deviceId) return;
     if (!activated) {
       await playerRef.current?.activateElement?.();
       setActivated(true);
     }
-    await transferPlayback(token, deviceId);
+    await ensureDeviceActive();
     if (isPlaying) {
       await pausePlayback(token, deviceId);
       setIsPlaying(false);
@@ -186,6 +202,7 @@ export default function WebPlayerPage() {
 
   const playNext = async () => {
     if (!token || !selected?.tracks) return;
+    await ensureDeviceActive();
     await nextTrack(token, deviceId ?? undefined);
     const idx = findPlayableIndex(currentTrackIndex, 1);
     setCurrentTrackIndex(idx);
@@ -196,6 +213,7 @@ export default function WebPlayerPage() {
 
   const playPrev = async () => {
     if (!token || !selected?.tracks) return;
+    await ensureDeviceActive();
     await previousTrack(token, deviceId ?? undefined);
     const idx = findPlayableIndex(currentTrackIndex, -1);
     setCurrentTrackIndex(idx);
@@ -206,6 +224,7 @@ export default function WebPlayerPage() {
 
   const handleSeek = async (ms: number) => {
     if (!token) return;
+    await ensureDeviceActive();
     await seekPlayback(token, ms, deviceId ?? undefined);
     setPosition(ms);
   };
@@ -213,6 +232,7 @@ export default function WebPlayerPage() {
   const handleVolumeChange = async (v: number) => {
     if (!token || !deviceId) return;
     setVolume(v);
+    await ensureDeviceActive();
     await apiSetVolume(token, Math.round(v * 100), deviceId);
     playerRef.current?.setVolume?.(v);
   };
