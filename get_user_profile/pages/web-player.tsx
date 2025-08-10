@@ -16,6 +16,8 @@ import {
   setVolume as apiSetVolume,
   setShuffle as apiSetShuffle,
   setRepeat as apiSetRepeat,
+  resumePlayback,
+  transferPlayback,
 } from "./api/player";
 import { redirectToAuthCodeFlow } from "../src/authCodeWithPkce";
 import { WebPlayer } from "../components/webPlayer";
@@ -46,6 +48,7 @@ export default function WebPlayerPage() {
   const playerRef = useRef<any>(null);
   const selectedRef = useRef<SpotifyPlaylistResponse | null>(null);
   const [activated, setActivated] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false);
 
   useEffect(() => {
     selectedRef.current = selected;
@@ -141,6 +144,7 @@ export default function WebPlayerPage() {
         ?.duration_ms ?? 0
     );
     setIsPlaying(false);
+    setHasStarted(false);
   };
 
   const togglePlay = async () => {
@@ -149,16 +153,23 @@ export default function WebPlayerPage() {
       await playerRef.current?.activateElement?.();
       setActivated(true);
     }
+    await transferPlayback(token, deviceId);
     if (isPlaying) {
       await pausePlayback(token, deviceId);
       setIsPlaying(false);
     } else {
-      await startPlayback(
-        token,
-        selected.uri,
-        currentTrackIndex,
-        deviceId
-      );
+      if (!hasStarted) {
+        await startPlayback(
+          token,
+          selected.uri,
+          currentTrackIndex,
+          deviceId,
+          position
+        );
+        setHasStarted(true);
+      } else {
+        await resumePlayback(token, deviceId);
+      }
       setIsPlaying(true);
     }
   };
@@ -224,6 +235,15 @@ export default function WebPlayerPage() {
     await apiSetRepeat(token, next, deviceId ?? undefined);
     setRepeatState(next);
   };
+
+  useEffect(() => {
+    if (!isPlaying || !playerRef.current) return;
+    const interval = setInterval(async () => {
+      const state = await playerRef.current.getCurrentState();
+      if (state) setPosition(state.position);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [isPlaying]);
 
   const closePlayer = async () => {
     setSelected(null);

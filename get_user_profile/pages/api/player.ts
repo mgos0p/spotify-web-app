@@ -22,7 +22,8 @@ export const startPlayback = async (
   token: string,
   contextUri: string,
   offset: number,
-  deviceId?: string
+  deviceId?: string,
+  positionMs?: number
 ): Promise<void> => {
   await fetch(
     `https://api.spotify.com/v1/me/player/play${
@@ -37,9 +38,40 @@ export const startPlayback = async (
       body: JSON.stringify({
         context_uri: contextUri,
         offset: { position: offset },
+        position_ms: positionMs,
       }),
     }
   );
+};
+
+export const resumePlayback = async (
+  token: string,
+  deviceId?: string
+): Promise<void> => {
+  await fetch(
+    `https://api.spotify.com/v1/me/player/play${
+      deviceId ? `?device_id=${deviceId}` : ""
+    }`,
+    {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify({}),
+    }
+  );
+};
+
+export const transferPlayback = async (
+  token: string,
+  deviceId: string
+): Promise<void> => {
+  await fetch("https://api.spotify.com/v1/me/player", {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ device_ids: [deviceId], play: false }),
+  });
 };
 
 export const pausePlayback = async (
