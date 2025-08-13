@@ -22,6 +22,7 @@ import {
 } from "../lib/spotify/player";
 import { redirectToAuthCodeFlow } from "../src/authCodeWithPkce";
 import { WebPlayer } from "../components/webPlayer";
+import type { ApiResult } from "../lib/spotify/api";
 
 const clientId = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID;
 
@@ -52,6 +53,15 @@ export default function WebPlayerPage() {
   const [activated, setActivated] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
   const deviceActiveRef = useRef(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const unwrap = <T,>(result: ApiResult<T>): T | null => {
+    if (result.error) {
+      setError(result.error);
+      return null;
+    }
+    return result.data;
+  };
 
   useEffect(() => {
     selectedRef.current = selected;
@@ -69,8 +79,10 @@ export default function WebPlayerPage() {
         redirectToAuthCodeFlow(clientId);
       } else {
         if (!token) setToken(storedAccessToken);
-        const playlistsData = await fetchPlaylists(storedAccessToken, 50, 0);
-        setPlaylists(playlistsData);
+        const playlistsData = unwrap(
+          await fetchPlaylists(storedAccessToken, 50, 0)
+        );
+        if (playlistsData) setPlaylists(playlistsData);
       }
     };
     fetchData();
@@ -79,8 +91,8 @@ export default function WebPlayerPage() {
   useEffect(() => {
     if (!token) return;
     const loadDevices = async () => {
-      const list = await fetchAvailableDevices(token);
-      setDevices(list);
+      const list = unwrap(await fetchAvailableDevices(token));
+      if (list) setDevices(list);
     };
     loadDevices();
   }, [token]);
@@ -123,11 +135,13 @@ export default function WebPlayerPage() {
   useEffect(() => {
     if (!token || !deviceId) return;
     const updatePlayback = async () => {
-      const data = await fetchPlayerState(token);
+      const data = unwrap(await fetchPlayerState(token));
       if (!data) return;
       if (data.device?.id !== deviceId) {
         deviceActiveRef.current = false;
-        await transferPlayback(token, deviceId, data.is_playing ?? false);
+        await unwrap(
+          await transferPlayback(token, deviceId, data.is_playing ?? false)
+        );
         return;
       }
       deviceActiveRef.current = true;
@@ -148,7 +162,8 @@ export default function WebPlayerPage() {
 
   const openPlaylist = async (pl: SpotifyPlaylistResponse) => {
     if (!token) return;
-    const detail = await fetchPlaylist(token, pl.id, 50, 0);
+    const detail = unwrap(await fetchPlaylist(token, pl.id, 50, 0));
+    if (!detail) return;
     setSelected(detail);
     const firstPlayable =
       detail.tracks?.items.findIndex((t) => t.track.is_playable !== false) ?? 0;
@@ -167,9 +182,9 @@ export default function WebPlayerPage() {
 
   const ensureDeviceActive = async () => {
     if (!token || !deviceId || deviceActiveRef.current) return;
-    await transferPlayback(token, deviceId);
+    await unwrap(await transferPlayback(token, deviceId));
     for (let i = 0; i < 10; i++) {
-      const data = await fetchPlayerState(token);
+      const data = unwrap(await fetchPlayerState(token));
       if (data?.device?.id === deviceId) {
         deviceActiveRef.current = true;
         playerRef.current?.setVolume?.(volume);
@@ -187,20 +202,22 @@ export default function WebPlayerPage() {
     }
     await ensureDeviceActive();
     if (isPlaying) {
-      await pausePlayback(token, deviceId);
+      await unwrap(await pausePlayback(token, deviceId));
       setIsPlaying(false);
     } else {
       if (!hasStarted) {
-        await startPlayback(
-          token,
-          selected.uri,
-          currentTrackIndex,
-          deviceId,
-          position
+        await unwrap(
+          await startPlayback(
+            token,
+            selected.uri,
+            currentTrackIndex,
+            deviceId,
+            position
+          )
         );
         setHasStarted(true);
       } else {
-        await resumePlayback(token, deviceId);
+        await unwrap(await resumePlayback(token, deviceId));
       }
       setIsPlaying(true);
     }
@@ -210,7 +227,7 @@ export default function WebPlayerPage() {
     if (!token) return;
     setDeviceId(id);
     deviceActiveRef.current = false;
-    await transferPlayback(token, id, isPlaying);
+    await unwrap(await transferPlayback(token, id, isPlaying));
   };
 
   const findPlayableIndex = (start: number, direction: 1 | -1): number => {
@@ -226,7 +243,7 @@ export default function WebPlayerPage() {
   const playNext = async () => {
     if (!token || !selected?.tracks) return;
     await ensureDeviceActive();
-    await nextTrack(token, deviceId ?? undefined);
+    await unwrap(await nextTrack(token, deviceId ?? undefined));
     const idx = findPlayableIndex(currentTrackIndex, 1);
     setCurrentTrackIndex(idx);
     setCurrentTrack(selected.tracks.items[idx].track);
@@ -237,7 +254,7 @@ export default function WebPlayerPage() {
   const playPrev = async () => {
     if (!token || !selected?.tracks) return;
     await ensureDeviceActive();
-    await previousTrack(token, deviceId ?? undefined);
+    await unwrap(await previousTrack(token, deviceId ?? undefined));
     const idx = findPlayableIndex(currentTrackIndex, -1);
     setCurrentTrackIndex(idx);
     setCurrentTrack(selected.tracks.items[idx].track);
@@ -248,7 +265,7 @@ export default function WebPlayerPage() {
   const handleSeek = async (ms: number) => {
     if (!token) return;
     await ensureDeviceActive();
-    await seekPlayback(token, ms, deviceId ?? undefined);
+    await unwrap(await seekPlayback(token, ms, deviceId ?? undefined));
     setPosition(ms);
   };
 
@@ -256,14 +273,14 @@ export default function WebPlayerPage() {
     if (!token || !deviceId) return;
     setVolume(v);
     await ensureDeviceActive();
-    await apiSetVolume(token, Math.round(v * 100), deviceId);
+    await unwrap(await apiSetVolume(token, Math.round(v * 100), deviceId));
     playerRef.current?.setVolume?.(v);
   };
 
   const toggleShuffle = async () => {
     if (!token) return;
     const newState = !shuffle;
-    await apiSetShuffle(token, newState, deviceId ?? undefined);
+    await unwrap(await apiSetShuffle(token, newState, deviceId ?? undefined));
     setShuffleState(newState);
   };
 
@@ -275,7 +292,7 @@ export default function WebPlayerPage() {
       "track",
     ];
     const next = modes[(modes.indexOf(repeat) + 1) % modes.length];
-    await apiSetRepeat(token, next, deviceId ?? undefined);
+    await unwrap(await apiSetRepeat(token, next, deviceId ?? undefined));
     setRepeatState(next);
   };
 
@@ -292,15 +309,16 @@ export default function WebPlayerPage() {
     setSelected(null);
     setIsPlaying(false);
     if (token) {
-      await pausePlayback(token, deviceId ?? undefined);
+      await unwrap(await pausePlayback(token, deviceId ?? undefined));
     }
   };
 
   if (!playlists) {
-    return <Loader />;
+    return error ? <div>{error}</div> : <Loader />;
   }
   return (
     <>
+      {error && <div className="text-red-500">{error}</div>}
       <Script src="https://sdk.scdn.co/spotify-player.js" strategy="afterInteractive" />
       <WebPlayer
         playlists={playlists}

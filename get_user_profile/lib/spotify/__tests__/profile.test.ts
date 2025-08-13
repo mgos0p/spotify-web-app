@@ -21,17 +21,17 @@ describe("fetchProfile", () => {
       method: "GET",
       headers: { Authorization: `Bearer ${token}` },
     });
-    expect(result).toEqual(mockProfile);
+    expect(result.data).toEqual(mockProfile);
+    expect(result.error).toBeNull();
   });
 
-  it("throws an error when the response is not ok", async () => {
+  it("returns error when the response is not ok", async () => {
     const fetchMock = jest.spyOn(global, "fetch").mockResolvedValue({
       ok: false,
     } as any);
 
-    await expect(fetchProfile(token)).rejects.toThrow(
-      "Failed to fetch profile"
-    );
+    const result = await fetchProfile(token);
+    expect(result.error).toBe("Failed to fetch profile");
     expect(fetchMock).toHaveBeenCalledWith("https://api.spotify.com/v1/me", {
       method: "GET",
       headers: { Authorization: `Bearer ${token}` },

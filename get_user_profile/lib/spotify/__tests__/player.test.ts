@@ -7,28 +7,29 @@ describe("player API error handling", () => {
     jest.restoreAllMocks();
   });
 
-  it("throws an error when fetchPlayerState response is not ok", async () => {
+  it("returns error when fetchPlayerState response is not ok", async () => {
     const fetchMock = jest
       .spyOn(global, "fetch")
       .mockResolvedValue({ ok: false } as any);
 
-    await expect(fetchPlayerState(token)).rejects.toThrow(
-      "Failed to fetch player state"
+    const result = await fetchPlayerState(token);
+    expect(result.error).toBe("Failed to fetch player state");
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.spotify.com/v1/me/player",
+      {
+        method: "GET",
+        headers: { Authorization: `Bearer ${token}` },
+      }
     );
-    expect(fetchMock).toHaveBeenCalledWith("https://api.spotify.com/v1/me/player", {
-      method: "GET",
-      headers: { Authorization: `Bearer ${token}` },
-    });
   });
 
-  it("throws an error when startPlayback response is not ok", async () => {
+  it("returns error when startPlayback response is not ok", async () => {
     const fetchMock = jest
       .spyOn(global, "fetch")
       .mockResolvedValue({ ok: false } as any);
 
-    await expect(startPlayback(token, "spotify:album:1", 0)).rejects.toThrow(
-      "Failed to start playback"
-    );
+    const result = await startPlayback(token, "spotify:album:1", 0);
+    expect(result.error).toBe("Failed to start playback");
     expect(fetchMock).toHaveBeenCalledWith(
       "https://api.spotify.com/v1/me/player/play",
       expect.objectContaining({

@@ -7,14 +7,13 @@ describe("playlist API error handling", () => {
     jest.restoreAllMocks();
   });
 
-  it("throws an error when fetchPlaylists response is not ok", async () => {
+  it("returns error when fetchPlaylists response is not ok", async () => {
     const fetchMock = jest
       .spyOn(global, "fetch")
       .mockResolvedValue({ ok: false } as any);
 
-    await expect(fetchPlaylists(token, 20, 0)).rejects.toThrow(
-      "Failed to fetch playlists"
-    );
+    const result = await fetchPlaylists(token, 20, 0);
+    expect(result.error).toBe("Failed to fetch playlists");
     expect(fetchMock).toHaveBeenCalledWith(
       `https://api.spotify.com/v1/me/playlists?limit=20&offset=0`,
       {
@@ -24,15 +23,14 @@ describe("playlist API error handling", () => {
     );
   });
 
-  it("throws an error when fetchPlaylist response is not ok", async () => {
+  it("returns error when fetchPlaylist response is not ok", async () => {
     const playlistId = "abc";
     const fetchMock = jest
       .spyOn(global, "fetch")
       .mockResolvedValue({ ok: false } as any);
 
-    await expect(
-      fetchPlaylist(token, playlistId, 20, 0)
-    ).rejects.toThrow("Failed to fetch playlist");
+    const result = await fetchPlaylist(token, playlistId, 20, 0);
+    expect(result.error).toBe("Failed to fetch playlist");
     expect(fetchMock).toHaveBeenCalledWith(
       `https://api.spotify.com/v1/playlists/${playlistId}?limit=20&offset=0`,
       {
@@ -42,15 +40,14 @@ describe("playlist API error handling", () => {
     );
   });
 
-  it("throws an error when fetchPlaylistItems response is not ok", async () => {
+  it("returns error when fetchPlaylistItems response is not ok", async () => {
     const url = "https://api.spotify.com/v1/playlist/items";
     const fetchMock = jest
       .spyOn(global, "fetch")
       .mockResolvedValue({ ok: false } as any);
 
-    await expect(fetchPlaylistItems(token, url)).rejects.toThrow(
-      "Failed to fetch playlist items"
-    );
+    const result = await fetchPlaylistItems(token, url);
+    expect(result.error).toBe("Failed to fetch playlist items");
     expect(fetchMock).toHaveBeenCalledWith(url, {
       method: "GET",
       headers: { Authorization: `Bearer ${token}` },

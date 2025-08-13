@@ -61,17 +61,17 @@ describe("fetchAudioAnalysis", () => {
         headers: { Authorization: `Bearer ${token}` },
       }
     );
-    expect(result).toEqual(mockResponse);
+    expect(result.data).toEqual(mockResponse);
+    expect(result.error).toBeNull();
   });
 
-  it("throws an error when the fetch response is not ok", async () => {
+  it("returns error when the fetch response is not ok", async () => {
     const fetchMock = jest.spyOn(global, "fetch").mockResolvedValue({
       ok: false,
     } as any);
 
-    await expect(fetchAudioAnalysis(token, trackId)).rejects.toThrow(
-      "Failed to fetch audio analysis"
-    );
+    const result = await fetchAudioAnalysis(token, trackId);
+    expect(result.error).toBe("Failed to fetch audio analysis");
     expect(fetchMock).toHaveBeenCalledWith(
       `https://api.spotify.com/v1/audio-analysis/${trackId}`,
       {
@@ -86,9 +86,8 @@ describe("fetchAudioAnalysis", () => {
       .spyOn(global, "fetch")
       .mockRejectedValue(new Error("Network error"));
 
-    await expect(fetchAudioAnalysis(token, trackId)).rejects.toThrow(
-      "Network error"
-    );
+    const result = await fetchAudioAnalysis(token, trackId);
+    expect(result.error).toBe("Network error");
     expect(fetchMock).toHaveBeenCalledWith(
       `https://api.spotify.com/v1/audio-analysis/${trackId}`,
       {
@@ -111,8 +110,8 @@ describe("fetchAudioAnalysis", () => {
 
     const result = await fetchAudioAnalysis(token, trackId);
 
-    expect(result).toEqual(partialResponse);
-    expect((result as any).sections).toBeUndefined();
+    expect(result.data).toEqual(partialResponse);
+    expect(result.error).toBeNull();
   });
 });
 
@@ -124,14 +123,13 @@ describe("fetchAudioFeatures", () => {
     jest.restoreAllMocks();
   });
 
-  it("throws an error when the fetch response is not ok", async () => {
+  it("returns error when the fetch response is not ok", async () => {
     const fetchMock = jest.spyOn(global, "fetch").mockResolvedValue({
       ok: false,
     } as any);
 
-    await expect(fetchAudioFeatures(token, trackId)).rejects.toThrow(
-      "Failed to fetch audio features"
-    );
+    const result = await fetchAudioFeatures(token, trackId);
+    expect(result.error).toBe("Failed to fetch audio features");
     expect(fetchMock).toHaveBeenCalledWith(
       `https://api.spotify.com/v1/audio-features/${trackId}`,
       {

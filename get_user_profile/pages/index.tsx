@@ -24,12 +24,12 @@ export default function Home() {
         return;
       }
       if (token) {
-        try {
-          const profileData = await fetchProfile(token);
-          setProfile(profileData);
-        } catch (err) {
-          console.error("Failed to fetch profile:", err);
+        const result = await fetchProfile(token);
+        if (result.error) {
+          console.error("Failed to fetch profile:", result.error);
           setError("Failed to load profile");
+        } else {
+          setProfile(result.data);
         }
         return;
       }

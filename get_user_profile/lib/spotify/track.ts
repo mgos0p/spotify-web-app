@@ -1,53 +1,47 @@
+import { spotifyFetch, ApiResult } from "./api";
+
 export const fetchAudioFeatures = async (
   accessToken: string,
   trackId: string
-): Promise<SpotifyAudioFeaturesResponse> => {
-  const response = await fetch(
+): Promise<ApiResult<SpotifyAudioFeaturesResponse>> =>
+  spotifyFetch<SpotifyAudioFeaturesResponse>(
     `https://api.spotify.com/v1/audio-features/${trackId}`,
     {
       method: "GET",
       headers: { Authorization: `Bearer ${accessToken}` },
-    }
+    },
+    "Failed to fetch audio features"
   );
-  if (!response.ok) {
-    throw new Error("Failed to fetch audio features");
-  }
-  return await response.json();
-};
 
 export const fetchAudioFeaturesBatch = async (
   accessToken: string,
   trackIds: string[]
-): Promise<SpotifyAudioFeaturesResponse[]> => {
-  const response = await fetch(
+): Promise<ApiResult<SpotifyAudioFeaturesResponse[]>> => {
+  const result = await spotifyFetch<{ audio_features: (SpotifyAudioFeaturesResponse | null)[] }>(
     `https://api.spotify.com/v1/audio-features?ids=${trackIds.join(",")}`,
     {
       method: "GET",
       headers: { Authorization: `Bearer ${accessToken}` },
-    }
+    },
+    "Failed to fetch audio features"
   );
-  if (!response.ok) {
-    throw new Error("Failed to fetch audio features");
-  }
-  const data = await response.json();
-  return (data.audio_features || []).filter(
-    (f: SpotifyAudioFeaturesResponse | null): f is SpotifyAudioFeaturesResponse =>
-      f !== null
-  );
+  return {
+    data: (result.data?.audio_features || []).filter(
+      (f: SpotifyAudioFeaturesResponse | null): f is SpotifyAudioFeaturesResponse => f !== null
+    ),
+    error: result.error,
+  };
 };
+
 export const fetchAudioAnalysis = async (
   accessToken: string,
   trackId: string
-): Promise<SpotifyAudioAnalysisResponse> => {
-  const response = await fetch(
+): Promise<ApiResult<SpotifyAudioAnalysisResponse>> =>
+  spotifyFetch<SpotifyAudioAnalysisResponse>(
     `https://api.spotify.com/v1/audio-analysis/${trackId}`,
     {
       method: "GET",
       headers: { Authorization: `Bearer ${accessToken}` },
-    }
+    },
+    "Failed to fetch audio analysis"
   );
-  if (!response.ok) {
-    throw new Error("Failed to fetch audio analysis");
-  }
-  return await response.json();
-};
